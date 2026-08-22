@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-14T00:00:00.000Z" agent="TITEN" etag="titen-cat4-mobile-siren" version="21.0.0" type="device">
+  <diagram id="cat4_flowchart" name="Flowchart - Peringatan Hierarkis &amp; Siren Override">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Nodes -->
+        <mxCell id="c4_start" value="Start: Hierarchical Alert Triggered" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_dec_level" value="Evaluasi Level Peringatan:&#xa;Tingkat Bahaya &amp; Target Receivers?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="120" width="280" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Level 1 -->
+        <mxCell id="c4_lvl1" value="LEVEL 1 (WASPADA / ANOMALI LOKAL)&#xa;Kirim Push Notifikasi Silent ke Aplikasi Mobile Teknisi&#xa;Log Kesehatan Sensor &amp; Baterai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="130" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Level 2 -->
+        <mxCell id="c4_lvl2" value="LEVEL 2 (SIAGA)&#xa;Kirim Push Notifikasi Bersuara ke Aplikasi Mobile Warga &amp; RT/RW&#xa;Peringatan Awal Kesiapsiagaan Warga" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="130" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Level 3 AWAS -->
+        <mxCell id="c4_lvl3_start" value="LEVEL 3 (AWAS - CONSENSUS VERIFIED)&#xa;Eksekusi Prosedur Darurat Bencana Mandiri" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="390" y="250" width="360" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_siren_on" value="AKSI SIRINE LOKAL (LATENSI &lt; 500ms):&#xa;Edge Node GPIO 26 Relay HIGH --&gt; Sirine 120dB &amp; Strobe Light AKTIF!" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B91C1C;fontColor=#FFFFFF;strokeColor=#7F1D1D;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="350" width="400" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_bot_prep" value="Mobile Push Service (FCM) Format Pesan Darurat (&lt; 3 Detik):&#xa;1. Detail Lokasi &amp; Link Google Maps Presisi&#xa;2. Metrik Telemetri (Tilt, Soil %, Temp °C, Consensus 2/3 Node)&#xa;3. Render Action Buttons pada Push Notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="450" width="420" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_bot_send" value="Kirim Emergency Push Broadcast to Mobile App Users &amp; BPBD" style="ellipse;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="560" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_user_action" value="Operator BPBD / Warga Menerima Alert &amp; Memilih Action Button:" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="650" width="300" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Button Actions -->
+        <mxCell id="c4_act_trc" value="Tombol [📞 Panggil Tim TRC]&#xa;Memicu Panggilan Telepon Darurat &amp; Dispatch Mobil TRC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="770" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_act_telemetry" value="Tombol [📊 Cek Telemetri]&#xa;Aplikasi Mobile Mengirimkan Grafik Real-time Sensor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="840" y="770" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_act_override" value="Tombol [🔊 Matikan Sirine] (Remote Override)&#xa;Otentikasi PIN &amp; Perintah Meredam Sirine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9A3412;fontColor=#FFFFFF;strokeColor=#EA580C;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="770" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_downlink_lora" value="Backend Mengirimkan LoRa Downlink Packet (SIREN_OFF)&#xa;via LoRa Gateway --&gt; Sensor Node" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="860" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_siren_off" value="Node Menerima Downlink &amp; Set GPIO 26 Relay LOW&#xa;(Sirine Lokal Dimatikan Berhasil)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="950" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_bot_update" value="Aplikasi Mobile Memperbarui Status Pesan Notifikasi:&#xa;[🔊 Sirine Dimatikan oleh Operator BPBD (19:45 WIB)]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="1040" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c4_end" value="End: Emergency Alert Handled" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="1130" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e4_1" edge="1" parent="1" source="c4_start" target="c4_dec_level" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_2" edge="1" parent="1" source="c4_dec_level" target="c4_lvl1" value="Level 1 (Waspada)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;fontColor=#475569;" />
+        <mxCell id="e4_3" edge="1" parent="1" source="c4_dec_level" target="c4_lvl2" value="Level 2 (Siaga)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;" />
+        <mxCell id="e4_4" edge="1" parent="1" source="c4_dec_level" target="c4_lvl3_start" value="Level 3 (AWAS)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=2;" />
+        <mxCell id="e4_5" edge="1" parent="1" source="c4_lvl3_start" target="c4_siren_on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_6" edge="1" parent="1" source="c4_siren_on" target="c4_bot_prep" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_7" edge="1" parent="1" source="c4_bot_prep" target="c4_bot_send" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_8" edge="1" parent="1" source="c4_bot_send" target="c4_user_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_9" edge="1" parent="1" source="c4_user_action" target="c4_act_trc" value="Klik Panggil TRC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;fontColor=#3B82F6;" />
+        <mxCell id="e4_10" edge="1" parent="1" source="c4_user_action" target="c4_act_telemetry" value="Klik Telemetri" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;fontColor=#3B82F6;" />
+        <mxCell id="e4_11" edge="1" parent="1" source="c4_user_action" target="c4_act_override" value="Klik Matikan Sirine" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EA580C;fontColor=#EA580C;strokeWidth=2;" />
+        <mxCell id="e4_12" edge="1" parent="1" source="c4_act_override" target="c4_downlink_lora" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_13" edge="1" parent="1" source="c4_downlink_lora" target="c4_siren_off" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_14" edge="1" parent="1" source="c4_siren_off" target="c4_bot_update" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_15" edge="1" parent="1" source="c4_bot_update" target="c4_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_16" edge="1" parent="1" source="c4_act_trc" target="c4_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" />
+        <mxCell id="e4_17" edge="1" parent="1" source="c4_act_telemetry" target="c4_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="cat4_activity" name="Activity Diagram - Hierarchical Alert &amp; Siren Override">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Swimlanes -->
+        <mxCell id="sw4_node" value="EDGE SENSOR NODE (HARDWARE &amp; SIREN)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="an4_siren" value="Set GPIO 26 Relay HIGH&#xa;Sound 120dB Siren &amp; Flash Strobe (&lt;500ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw4_node">
+          <mxGeometry x="40" y="150" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an4_downlink" value="Receive Encrypted LoRa Downlink Command (SIREN_OFF)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw4_node">
+          <mxGeometry x="30" y="650" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an4_off" value="Set GPIO 26 Relay LOW (Siren Deactivated)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontSize=11;" vertex="1" parent="sw4_node">
+          <mxGeometry x="40" y="760" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw4_bot" value="MOBILE PUSH SERVICE BACKEND (FCM)" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="360" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_start" value="Receive Verified AWAS Trigger" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=11;fontStyle=1;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="80" y="60" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_format" value="Format Push Alert Payload + Google Maps Link + Action Buttons" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="40" y="270" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_send" value="Dispatch Mobile Push Notification to BPBD &amp; Users (<3s)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="40" y="370" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_callback" value="Process Action: Button [🔊 Matikan Sirine] Clicked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9A3412;fontColor=#FFFFFF;strokeColor=#EA580C;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="30" y="540" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_downlink" value="Send LoRa Downlink to Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="60" y="650" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw4_op" value="OPERATOR BPBD / USER (FLUTTER APP)" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="aop_recv" value="Receive Loud Mobile Push Alert Notification" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EF4444;fontColor=#FFFFFF;strokeColor=#B91C1C;fontSize=11;fontStyle=1;" vertex="1" parent="sw4_op">
+          <mxGeometry x="50" y="370" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aop_click" value="Review Map &amp; Click Button [🔊 Matikan Sirine]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw4_op">
+          <mxGeometry x="40" y="540" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="ae4_1" edge="1" parent="1" source="an4_siren" target="abot_start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae4_2" edge="1" parent="1" source="abot_start" target="abot_format" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae4_3" edge="1" parent="1" source="abot_format" target="abot_send" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae4_4" edge="1" parent="1" source="abot_send" target="aop_recv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;" />
+        <mxCell id="ae4_5" edge="1" parent="1" source="aop_recv" target="aop_click" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae4_6" edge="1" parent="1" source="aop_click" target="abot_callback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EA580C;" />
+        <mxCell id="ae4_7" edge="1" parent="1" source="abot_callback" target="abot_downlink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae4_8" edge="1" parent="1" source="abot_downlink" target="an4_downlink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="ae4_9" edge="1" parent="1" source="an4_downlink" target="an4_off" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

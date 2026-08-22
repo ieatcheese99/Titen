@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="Firmus" etag="firmus-cat2-lora" version="21.0.0" type="device">
+  <diagram id="cat2_flowchart" name="Flowchart - Transmisi LoRa &amp; Buffering">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Nodes -->
+        <mxCell id="c2_start" value="Start: Sensor Sampling Complete" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_pack_struct" value="Pengemasan Payload Biner 16 Byte (FirmusPayload):&#xa;[node_id(1B) | bat_pct(1B) | pitch(2B) | roll(2B) | accel(2B) | soil(1B) | rain(2B) | status(1B) | timestamp(4B)]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="120" width="420" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_encrypt_aes" value="Enkripsi Payload Simetris AES-128 Bit&#xa;(Keamanan Data End-to-End RF)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="220" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_send_lora" value="Kirim Paket RF LoRa 915MHz via SX1276&#xa;(Power Out +20dBm, Bandwidth 125kHz)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="310" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_wait_ack" value="Tunggu Balasan ACK dari LoRa Gateway&#xa;(Timer Timeout = 1.5 Detik)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="400" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_dec_ack" value="Apakah ACK Diterima&#xa;Sebelum Timeout?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="460" y="490" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Offline Storage Branch -->
+        <mxCell id="c2_spiffs_write" value="Koneksi Gateway Putus / Offline!&#xa;Tulis 16-Byte Struct ke SPIFFS Internal Flash&#xa;(Ring Buffer Ring Storage Max 500 Log)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="500" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Online Success Branch -->
+        <mxCell id="c2_spiffs_check" value="ACK Terverifikasi!&#xa;Cek Buffer SPIFFS internal:&#xa;Apakah ada log offline tersimpan?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="610" width="260" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_flush_spiffs" value="Sinkronisasi Offline Data Buffering:&#xa;Kirim Log Terpenuhi dalam SPIFFS bertahap&#xa;kemudian Kosongkan Buffer Flash" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#065F46;fontColor=#FFFFFF;strokeColor=#059669;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="620" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Gateway Processing Section -->
+        <mxCell id="c2_gw_receive" value="LoRa Gateway Menerima RF Packet" style="ellipse;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="460" y="740" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_gw_decrypt" value="Dekripsi AES-128 &amp; Unpack Binary Struct&#xa;Konversi ke JSON Telemetry Payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="830" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_mqtt_pub" value="Publish Telemetry via MQTT Protocol (Wi-Fi/GSM)&#xa;Topic: v1/devices/me/telemetry --&gt; ThingsBoard Server" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="390" y="920" width="360" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c2_end" value="End: Return to Deep Sleep" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1020" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e2_1" edge="1" parent="1" source="c2_start" target="c2_pack_struct" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_2" edge="1" parent="1" source="c2_pack_struct" target="c2_encrypt_aes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_3" edge="1" parent="1" source="c2_encrypt_aes" target="c2_send_lora" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_4" edge="1" parent="1" source="c2_send_lora" target="c2_wait_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_5" edge="1" parent="1" source="c2_wait_ack" target="c2_dec_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_6" edge="1" parent="1" source="c2_dec_ack" target="c2_spiffs_write" value="TIDAK (Timeout)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;" />
+        <mxCell id="e2_7" edge="1" parent="1" source="c2_dec_ack" target="c2_spiffs_check" value="YA (ACK Valid)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e2_8" edge="1" parent="1" source="c2_spiffs_check" target="c2_flush_spiffs" value="Ada Log Buffer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;" />
+        <mxCell id="e2_9" edge="1" parent="1" source="c2_spiffs_check" target="c2_gw_receive" value="Buffer Kosong" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e2_10" edge="1" parent="1" source="c2_flush_spiffs" target="c2_gw_receive" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="e2_11" edge="1" parent="1" source="c2_gw_receive" target="c2_gw_decrypt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_12" edge="1" parent="1" source="c2_gw_decrypt" target="c2_mqtt_pub" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_13" edge="1" parent="1" source="c2_mqtt_pub" target="c2_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_14" edge="1" parent="1" source="c2_spiffs_write" target="c2_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="cat2_activity" name="Activity Diagram - Transmisi LoRa &amp; Buffering">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Swimlanes -->
+        <mxCell id="sw2_node" value="EDGE SENSOR NODE (ESP32)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="440" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="an_start" value="Sensors Data Ready" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=12;fontStyle=1;" vertex="1" parent="sw2_node">
+          <mxGeometry x="130" y="60" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="an_pack" value="Construct 16-Byte Binary Struct &amp; Encrypt AES-128" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="80" y="150" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an_tx" value="Transmit Packet via LoRa SX1276 SPI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=2;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="90" y="250" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an_spiffs" value="Write to SPIFFS Ring Buffer Flash Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="90" y="400" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an_flush" value="Flush SPIFFS Buffered Data to Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="90" y="520" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw2_rf" value="KOMUNIKASI NIRKABEL LORA (915MHz RF)" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="40" width="440" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ar_rf_tx" value="Propagation 915MHz RF Payload&#xa;(Coverage 2km NLOS / 10km LOS)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw2_rf">
+          <mxGeometry x="70" y="255" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ar_ack" value="Send LoRa ACK Frame to Edge Node" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#065F46;fontColor=#FFFFFF;strokeColor=#10B981;fontSize=11;" vertex="1" parent="sw2_rf">
+          <mxGeometry x="80" y="525" width="280" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw2_gw" value="LORA GATEWAY &amp; MQTT CLIENT SERVICE" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="40" width="440" height="950" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ag_recv" value="SX1276 Receiver Interrupt &amp; AES Decrypt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw2_gw">
+          <mxGeometry x="80" y="250" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ag_unpack" value="Unpack Struct &amp; Build JSON Telemetry Payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw2_gw">
+          <mxGeometry x="80" y="380" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ag_mqtt" value="Publish Telemetry via MQTT to Cloud (ThingsBoard)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="sw2_gw">
+          <mxGeometry x="70" y="650" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Activity Edges -->
+        <mxCell id="a2e1" edge="1" parent="1" source="an_start" target="an_pack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a2e2" edge="1" parent="1" source="an_pack" target="an_tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a2e3" edge="1" parent="1" source="an_tx" target="ar_rf_tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="a2e4" edge="1" parent="1" source="ar_rf_tx" target="ag_recv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a2e5" edge="1" parent="1" source="ag_recv" target="ar_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="a2e6" edge="1" parent="1" source="ar_ack" target="an_flush" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="a2e7" edge="1" parent="1" source="ag_recv" target="ag_unpack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a2e8" edge="1" parent="1" source="ag_unpack" target="ag_mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="Firmus" etag="firmus-cat5-gotham-ui" version="21.0.0" type="device">
+  <diagram id="cat5_flowchart" name="Flowchart - Gotham-Friendly UI Interaction">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Nodes -->
+        <mxCell id="c5_start" value="Start: Access Web Dashboard UI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_auth" value="Otentikasi User &amp; JWT Token Validation" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="120" width="260" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_login" value="Redirect to Login Page&#xa;Input Username &amp; Password / OTP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="130" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_theme_load" value="Load Gotham Theme Engine:&#xa;Background: #090D16 | Card: #131B2E | Border: #1E293B&#xa;Establish WebSocket Stream Connection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="230" width="320" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_mode_select" value="Cek Mode Layar Pengguna:&#xa;Mode Switcher Selection?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#E0E7FF;fontColor=#3730A3;strokeColor=#6366F1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="330" width="240" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Mode Sederhana -->
+        <mxCell id="c5_simple_mode" value="MODE SEDERHANA (Warga / Lurah / Awam):&#xa;1. Top Banner Status Bahasa Natural ('KONDISI LERENG STABIL')&#xa;2. Peta Kontur Sederhana + Pin Neon Node (Hijau/Kuning/Merah)&#xa;3. Tombol Bantuan Darurat 1-Klik" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="450" width="340" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Mode Taktis -->
+        <mxCell id="c5_tactical_mode" value="MODE TAKTIS (BPBD / Operator TRC / Teknisi):&#xa;1. Peta Spasial GIS 3D/2D + Toggle Layer (Topografi, Soil, LoRa)&#xa;2. Graph Konsensus Node-Link Palantir Gotham Overlay&#xa;3. Metrik Telemetri Lengkap (Angle Δθ, Soil %, Rain, RSSI/SNR)&#xa;4. Action Center Kendali Taktis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="700" y="450" width="360" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_action_center" value="User Berinteraksi di Action Center:&#xa;Klik [🔊 Uji Sirine Lokal] (Pengujian Bulanan)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="580" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_pin_modal" value="Tampilkan Modal Dialogue PIN Keamanan:&#xa;Input Security PIN Pengujian?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="680" width="280" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_pin_invalid" value="PIN Salah! Tampilkan Warning Toast Notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="695" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_api_test" value="Kirim Request REST API POST /api/v1/siren/test (Duration: 5s)&#xa;Backend Dispatches Test Downlink to Edge Node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="800" width="380" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_siren_test_run" value="Edge Node Sirine Berbunyi Selama 5 Detik &amp; Off Otomatis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="900" width="340" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_audit_log" value="Dashboard Memperbarui Log Keberhasilan Pengujian&#xa;Catat ke Audit Trail Log Database" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="990" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c5_end" value="End: User Session Active" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="1080" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e5_1" edge="1" parent="1" source="c5_start" target="c5_auth" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_2" edge="1" parent="1" source="c5_auth" target="c5_login" value="Invalid Token" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;" />
+        <mxCell id="e5_3" edge="1" parent="1" source="c5_auth" target="c5_theme_load" value="Valid Token" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e5_4" edge="1" parent="1" source="c5_theme_load" target="c5_mode_select" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_5" edge="1" parent="1" source="c5_mode_select" target="c5_simple_mode" value="Mode Sederhana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e5_6" edge="1" parent="1" source="c5_mode_select" target="c5_tactical_mode" value="Mode Taktis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6366F1;fontColor=#6366F1;" />
+        <mxCell id="e5_7" edge="1" parent="1" source="c5_simple_mode" target="c5_action_center" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_8" edge="1" parent="1" source="c5_tactical_mode" target="c5_action_center" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_9" edge="1" parent="1" source="c5_action_center" target="c5_pin_modal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_10" edge="1" parent="1" source="c5_pin_modal" target="c5_pin_invalid" value="PIN Salah" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;" />
+        <mxCell id="e5_11" edge="1" parent="1" source="c5_pin_modal" target="c5_api_test" value="PIN Valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e5_12" edge="1" parent="1" source="c5_api_test" target="c5_siren_test_run" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_13" edge="1" parent="1" source="c5_siren_test_run" target="c5_audit_log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_14" edge="1" parent="1" source="c5_audit_log" target="c5_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_15" edge="1" parent="1" source="c5_pin_invalid" target="c5_action_center" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748B;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="cat5_activity" name="Activity Diagram - Gotham-Friendly UI Interaction">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Swimlanes -->
+        <mxCell id="sw5_user" value="PENGGUNA (WARGA / LURAH / BPBD OPERATOR)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="au5_open" value="Access Dashboard Web URL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=11;fontStyle=1;" vertex="1" parent="sw5_user">
+          <mxGeometry x="60" y="60" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="au5_toggle" value="Toggle Mode: Simple vs Tactical" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw5_user">
+          <mxGeometry x="50" y="270" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="au5_click" value="Click [🔊 Uji Sirine] in Action Center &amp; Enter PIN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw5_user">
+          <mxGeometry x="30" y="520" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw5_client" value="WEB DASHBOARD PRESENTATION LAYER (GOTHAM UI)" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="380" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="acl5_render" value="Render Gotham Dark UI (#090D16) &amp; Open WebSocket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw5_client">
+          <mxGeometry x="40" y="160" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acl5_view" value="Switch View: Simple Status Banner or Tactical GIS 3D Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw5_client">
+          <mxGeometry x="40" y="270" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acl5_post" value="Send REST API Request POST /siren/test with PIN Payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;" vertex="1" parent="sw5_client">
+          <mxGeometry x="40" y="520" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw5_cloud" value="THINGSBOARD / CLOUD API BACKEND" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="40" width="320" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="acld5_verify" value="Verify JWT Auth Token &amp; Streams Spatial Telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw5_cloud">
+          <mxGeometry x="40" y="160" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acld5_pin" value="Verify Security PIN &amp; Trigger LoRa Gateway Downlink" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw5_cloud">
+          <mxGeometry x="40" y="520" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acld5_log" value="Log Action to Audit Trail Database" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="sw5_cloud">
+          <mxGeometry x="40" y="760" width="240" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw5_node" value="HARDWARE EDGE SENSOR NODE" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="40" width="280" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="anode5_siren" value="Sound Siren 120dB for 5 Seconds &amp; Auto Off" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontStyle=1;fontSize=11;" vertex="1" parent="sw5_node">
+          <mxGeometry x="30" y="640" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity Edges -->
+        <mxCell id="a5e1" edge="1" parent="1" source="au5_open" target="acld5_verify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a5e2" edge="1" parent="1" source="acld5_verify" target="acl5_render" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="a5e3" edge="1" parent="1" source="au5_toggle" target="acl5_view" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;" />
+        <mxCell id="a5e4" edge="1" parent="1" source="au5_click" target="acl5_post" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="a5e5" edge="1" parent="1" source="acl5_post" target="acld5_pin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a5e6" edge="1" parent="1" source="acld5_pin" target="anode5_siren" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="a5e7" edge="1" parent="1" source="anode5_siren" target="acld5_log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

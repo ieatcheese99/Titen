@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="Firmus" etag="firmus-cat1-sopowake" version="21.0.0" type="device">
+  <diagram id="cat1_flowchart" name="Flowchart - Edge Sensing &amp; SoPoWake">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Nodes -->
+        <mxCell id="c1_start" value="Start / Power On (ESP32 Edge Node)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_init_hw" value="Inisialisasi GPIO, I2C MPU6050, SPI LoRa, ADC Soil, &amp; Hardware Interrupt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="120" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_bms_check" value="Cek BMS Battery Voltage&#xa;(Divider GPIO 36)&#xa;V_bat &lt; 3.2V?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="460" y="210" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_bms_protect" value="Deep Discharge Protection&#xa;Disable LoRa &amp; Siren, Enter Ultra Deep Sleep" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="740" y="225" width="250" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_cfg_wake" value="Konfigurasi Interrupt SoPoWake:&#xa;1. MPU6050 INT (Accel &gt; 0.15g / Tilt &gt; 2.0°)&#xa;2. Timer RTC (Heartbeat 30 Menit)&#xa;3. Rain Gauge Pulse Interrupt" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="330" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_sleep_mode" value="Masuk Mode ESP32 Deep Sleep&#xa;(Konsumsi Arus &lt; 15µA)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontStyle=1;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="430" width="240" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_wake_trigger" value="HARDWARE INTERRUPT TERPICU!&#xa;(MPU6050 / RTC Timer / Rain Gauge)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#E0E7FF;fontColor=#3730A3;strokeColor=#6366F1;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="530" width="260" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_read_sensors" value="Sampling 3 Sensor (Multi-Sensor Fusion):&#xa;1. MPU6050: ΔPitch &amp; ΔRoll (Sudut Kemiringan)&#xa;2. Capacitive Soil: Kelembapan Tanah (%)&#xa;3. Tipping Bucket: Presipitasi Hujan (mm/jam)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="650" width="280" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_calc_svi" value="Hitung Indeks Kerentanan Lereng (SVI):&#xa;SVI = (0.50 * Δθ/θmax) + (0.30 * Msoil/100) + (0.20 * Rrain/Rmax)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="760" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_dec_svi" value="Evaluasi Level SVI:&#xa;Tingkat Kerentanan?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="850" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_status_normal" value="SVI &lt; 0.40 (AMAN/STABIL)&#xa;Kemas Telemetri Heartbeat Rutin&#xa;Kembali ke Deep Sleep" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="860" width="230" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_status_waspada" value="0.40 ≤ SVI &lt; 0.65 (WASPADA) / 0.65 ≤ SVI &lt; 0.80 (SIAGA)&#xa;Tingkatkan Frekuensi Sampling &amp; Kirim Paket Alert LoRa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="730" y="860" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_threshold_val" value="SVI ≥ 0.80 (POTENSI BAHAYA LONGSOR)&#xa;Masuk State THRESHOLD_VALIDATION&#xa;(Sampling Kontinu Window 5 Detik)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="980" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_dec_persistent" value="Apakah Gerakan Persisten &amp; Valid?&#xa;(Bukan Transient Noise/Guncangan Instan)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1080" width="280" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_noise_log" value="Abaikan Noise Transient&#xa;Log Anomali Lokal ke Memori Internal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="150" y="1095" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c1_trigger_emergency" value="STATE EMERGENCY ALERT!&#xa;1. Aktifkan Relay Sirine Lokal 120dB (GPIO 26) &lt; 500ms&#xa;2. Broadcast Paket LoRa Darurat (Status: AWAS) ke Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1220" width="360" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" edge="1" parent="1" source="c1_start" target="c1_init_hw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e2" edge="1" parent="1" source="c1_init_hw" target="c1_bms_check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e3" edge="1" parent="1" source="c1_bms_check" target="c1_bms_protect" value="YA (V &lt; 3.2V)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=1.5;" />
+        <mxCell id="e4" edge="1" parent="1" source="c1_bms_check" target="c1_cfg_wake" value="TIDAK (V ≥ 3.2V)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;strokeWidth=1.5;" />
+        <mxCell id="e5" edge="1" parent="1" source="c1_cfg_wake" target="c1_sleep_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e6" edge="1" parent="1" source="c1_sleep_mode" target="c1_wake_trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#38BDF8;strokeWidth=2;fontColor=#38BDF8;" value="Wait Interrupt" />
+        <mxCell id="e7" edge="1" parent="1" source="c1_wake_trigger" target="c1_read_sensors" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e8" edge="1" parent="1" source="c1_read_sensors" target="c1_calc_svi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e9" edge="1" parent="1" source="c1_calc_svi" target="c1_dec_svi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e10" edge="1" parent="1" source="c1_dec_svi" target="c1_status_normal" value="SVI &lt; 0.40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;strokeWidth=1.5;" />
+        <mxCell id="e11" edge="1" parent="1" source="c1_dec_svi" target="c1_status_waspada" value="0.40 ≤ SVI &lt; 0.80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;strokeWidth=1.5;" />
+        <mxCell id="e12" edge="1" parent="1" source="c1_dec_svi" target="c1_threshold_val" value="SVI ≥ 0.80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=1.5;" />
+        <mxCell id="e13" edge="1" parent="1" source="c1_status_normal" target="c1_sleep_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" />
+        <mxCell id="e14" edge="1" parent="1" source="c1_threshold_val" target="c1_dec_persistent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e15" edge="1" parent="1" source="c1_dec_persistent" target="c1_noise_log" value="TIDAK (Noise)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748B;fontColor=#64748B;" />
+        <mxCell id="e16" edge="1" parent="1" source="c1_dec_persistent" target="c1_trigger_emergency" value="YA (Gerakan Valid)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=2;" />
+        <mxCell id="e17" edge="1" parent="1" source="c1_noise_log" target="c1_sleep_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748B;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="cat1_activity" name="Activity Diagram - Edge Sensing &amp; SoPoWake">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Swimlanes -->
+        <mxCell id="sw_power" value="SUB-SISTEM POWER &amp; PANEL SURYA" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="400" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="p_bms" value="BMS &amp; Solar Panel CN3791&#xa;Mengisi Baterai 18650 6000mAh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#10B981;fontSize=11;" vertex="1" parent="sw_power">
+          <mxGeometry x="80" y="100" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p_ldo" value="HT7333-A LDO Regulator&#xa;Supplies Constant 3.3V (Quiescent 1.2µA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw_power">
+          <mxGeometry x="70" y="220" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p_volt_read" value="Voltage Divider ADC Read&#xa;Send V_bat status to ESP32" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw_power">
+          <mxGeometry x="80" y="340" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw_sensor" value="HARDWARE SENSOR (MPU6050 / SOIL / RAIN)" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="40" width="440" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="s_mpu_detect" value="MPU6050 Motion Engine&#xa;Mendeteksi Getaran &gt; 0.15g / Tilt &gt; 2.0°" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw_sensor">
+          <mxGeometry x="80" y="430" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_int_pulse" value="Generate Hardware Interrupt Pulse (INT GPIO 33)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#E0E7FF;fontColor=#3730A3;strokeColor=#6366F1;fontSize=11;" vertex="1" parent="sw_sensor">
+          <mxGeometry x="70" y="530" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s_analog_out" value="Capacitive Soil Moisture &amp; Rain Gauge&#xa;Supply Analog ADC Voltage &amp; Digital Pulses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw_sensor">
+          <mxGeometry x="70" y="650" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw_esp32" value="MIKROKONTROLER ESP32 (FIRMWARE &amp; SOPOWAKE ENGINE)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="40" width="480" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="e_boot" value="Start / Wakeup Event" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=12;fontStyle=1;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="150" y="60" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chk_v" value="Verify Battery Voltage ≥ 3.2V" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="130" y="150" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sleep" value="Enter Deep Sleep Mode (&lt;15µA)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=2;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="130" y="270" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_wake_proc" value="Process Wakeup Cause (Interrupt Handler)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="110" y="525" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_svi" value="Run Sensor Fusion &amp; Calculate SVI Index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="110" y="650" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_eval_state" value="State Machine Decision&#xa;SVI &gt;= 0.80?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="140" y="760" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e_siren_act" value="ACTIVATE LOCAL SIREN RELAY (120dB)&#xa;&amp; Prepare LoRa Transmission" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="100" y="880" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Inter-lane Edges -->
+        <mxCell id="ae1" edge="1" parent="1" source="p_bms" target="p_ldo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae2" edge="1" parent="1" source="p_ldo" target="p_volt_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae3" edge="1" parent="1" source="p_volt_read" target="e_chk_v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="ae4" edge="1" parent="1" source="e_boot" target="e_chk_v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae5" edge="1" parent="1" source="e_chk_v" target="e_sleep" value="Valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="ae6" edge="1" parent="1" source="e_sleep" target="s_mpu_detect" value="Standby" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="ae7" edge="1" parent="1" source="s_mpu_detect" target="s_int_pulse" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="ae8" edge="1" parent="1" source="s_int_pulse" target="e_wake_proc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6366F1;" />
+        <mxCell id="ae9" edge="1" parent="1" source="e_wake_proc" target="s_analog_out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae10" edge="1" parent="1" source="s_analog_out" target="e_svi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="ae11" edge="1" parent="1" source="e_svi" target="e_eval_state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae12" edge="1" parent="1" source="e_eval_state" target="e_siren_act" value="AWAS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="ae13" edge="1" parent="1" source="e_eval_state" target="e_sleep" value="AMAN" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

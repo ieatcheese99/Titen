@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="Firmus" etag="firmus-cat3-consensus" version="21.0.0" type="device">
+  <diagram id="cat3_flowchart" name="Flowchart - Multi-Node Consensus Engine">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Nodes -->
+        <mxCell id="c3_start" value="Start: Incoming MQTT Telemetry Stream&#xa;(ThingsBoard Cloud Backend)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="30" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_store_log" value="Simpan Telemetri Mentah ke PostgreSQL (TELEMETRY_LOG):&#xa;[log_id, node_id, pitch, roll, accel, soil_moisture, rainfall, rssi, snr, timestamp]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="120" width="440" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_upd_node" value="Update Status SENSOR_NODE Table:&#xa;last_seen = NOW(), battery_level, status_code" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="220" width="320" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_chk_anomaly" value="Apakah Node A melaporkan&#xa;status WASPADA/SIAGA/AWAS&#xa;atau Anomali SVI ≥ 0.40?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="310" width="280" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_status_normal" value="Status Lereng AMAN&#xa;Update Dashboard Indicator (Neon Emerald)&#xa;Selesai - Tunggu Stream Berikutnya" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="325" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_consensus_query" value="Trigger Multi-Node Consensus Engine:&#xa;Query Node B &amp; Node C dalam Radius 100m (LOCATION_ZONE)&#xa;dalam Window Waktu 10 Detik Terakhir" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="440" width="400" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_eval_match" value="Evaluasi Konsensus Multi-Node:&#xa;Apakah ≥ 2 Node Terdekat&#xa;Mendeteksi Pergerakan Bahaya?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="550" width="300" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Single Node Anomaly / False Alarm -->
+        <mxCell id="c3_false_alarm" value="KONSENSUS GAGAL (Hanya 1 Node Aktif)&#xa;Klasifikasi: ANOMALI LOKAL / FALSE ALARM&#xa;(Gangguan Hewan, Pohon Jatuh, Kendaraan)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;fontColor=#9A3412;strokeColor=#F97316;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="565" width="320" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_log_tech" value="Simpan ALERT_EVENT (multi_node_verified = false)&#xa;Kirim Notifikasi Silent Level 1 ke Aplikasi Mobile Teknisi&#xa;Cek fisik hardware disarankan (Sirine TIDAK Dipicu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="680" width="320" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Verified Landslide -->
+        <mxCell id="c3_verify_true" value="KONSENSUS TERVERIFIKASI (≥ 2 Node Active)!&#xa;Status System: AWAS (BENCANA LONGSOR REAL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="410" y="690" width="340" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_save_alert" value="Catat ALERT_EVENT Table:&#xa;[alert_id, primary_node_id, triggered_at, alert_level='AWAS',&#xa;multi_node_verified=true, siren_activated=true, mobile_push_sent=true]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="790" width="400" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_dispatch" value="Dispatch Peringatan Darurat Hierarkis:&#xa;1. Konfirmasi Sirine Lokal 120dB Aktif (&lt; 500ms)&#xa;2. Push Notifikasi Mobile ke BPBD/TRC (&lt; 3 Detik)&#xa;3. Update Dashboard Tactical Map (Crimson Red Blinking)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="890" width="400" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="c3_end" value="End: Alert Cycle Executed" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1000" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e3_1" edge="1" parent="1" source="c3_start" target="c3_store_log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_2" edge="1" parent="1" source="c3_store_log" target="c3_upd_node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_3" edge="1" parent="1" source="c3_upd_node" target="c3_chk_anomaly" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_4" edge="1" parent="1" source="c3_chk_anomaly" target="c3_status_normal" value="TIDAK (Normal)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e3_5" edge="1" parent="1" source="c3_chk_anomaly" target="c3_consensus_query" value="YA (Anomali)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;" />
+        <mxCell id="e3_6" edge="1" parent="1" source="c3_consensus_query" target="c3_eval_match" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_7" edge="1" parent="1" source="c3_eval_match" target="c3_false_alarm" value="NO (&lt; 2 Nodes)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F97316;fontColor=#F97316;" />
+        <mxCell id="e3_8" edge="1" parent="1" source="c3_eval_match" target="c3_verify_true" value="YES (≥ 2 Nodes)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=2;" />
+        <mxCell id="e3_9" edge="1" parent="1" source="c3_false_alarm" target="c3_log_tech" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F97316;" />
+        <mxCell id="e3_10" edge="1" parent="1" source="c3_verify_true" target="c3_save_alert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_11" edge="1" parent="1" source="c3_save_alert" target="c3_dispatch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_12" edge="1" parent="1" source="c3_dispatch" target="c3_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_13" edge="1" parent="1" source="c3_log_tech" target="c3_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="cat3_activity" name="Activity Diagram - Multi-Node Consensus Engine">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Swimlanes -->
+        <mxCell id="sw3_tb" value="THINGSBOARD MQTT TELEMETRY INGESTION" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="atb_mqtt" value="Receive Data Stream from LoRa Gateway" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=11;fontStyle=1;" vertex="1" parent="sw3_tb">
+          <mxGeometry x="60" y="60" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="atb_pass" value="Forward Payload to Rules Engine &amp; DB Store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw3_tb">
+          <mxGeometry x="50" y="150" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw3_db" value="POSTGRESQL / TIMESCALEDB STORAGE" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="adb_insert" value="INSERT INTO TELEMETRY_LOG&#xa;&amp; UPDATE SENSOR_NODE Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw3_db">
+          <mxGeometry x="50" y="150" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="adb_spatial" value="Execute Spatial Query:&#xa;SELECT neighbor_nodes WHERE radius &lt; 100m AND time &gt; NOW()-10s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw3_db">
+          <mxGeometry x="40" y="360" width="260" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw3_engine" value="MULTI-NODE CONSENSUS ENGINE" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="40" width="360" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_trigger" value="Detect SVI Threshold Anomaly" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="80" y="240" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_calc" value="Cross-Validate Signals (Node A + B + C)&#xa;Count Active Hazard Nodes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="60" y="480" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_decision" value="Match ≥ 2 Nodes?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="90" y="580" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_true" value="Set multi_node_verified = true&#xa;Status: AWAS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="20" y="700" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_false" value="Set multi_node_verified = false&#xa;Status: ANOMALI LOKAL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;fontColor=#9A3412;strokeColor=#F97316;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="190" y="700" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw3_dispatch" value="HIERARCHICAL ALERT DISPATCHER" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="40" width="280" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="adisp_call" value="Trigger Emergency Siren &amp; Broadcast Push Alert to Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw3_dispatch">
+          <mxGeometry x="30" y="700" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="adisp_silent" value="Send Silent Push Alert to Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="sw3_dispatch">
+          <mxGeometry x="30" y="800" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity Edges -->
+        <mxCell id="a3e1" edge="1" parent="1" source="atb_mqtt" target="atb_pass" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a3e2" edge="1" parent="1" source="atb_pass" target="adb_insert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a3e3" edge="1" parent="1" source="atb_pass" target="aeng_trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="a3e4" edge="1" parent="1" source="aeng_trigger" target="adb_spatial" value="Anomali" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a3e5" edge="1" parent="1" source="adb_spatial" target="aeng_calc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a3e6" edge="1" parent="1" source="aeng_calc" target="aeng_decision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a3e7" edge="1" parent="1" source="aeng_decision" target="aeng_true" value="≥2 Node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="a3e8" edge="1" parent="1" source="aeng_decision" target="aeng_false" value="1 Node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F97316;" />
+        <mxCell id="a3e9" edge="1" parent="1" source="aeng_true" target="adisp_call" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="a3e10" edge="1" parent="1" source="aeng_false" target="adisp_silent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

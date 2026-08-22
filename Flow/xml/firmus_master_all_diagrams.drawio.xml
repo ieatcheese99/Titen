@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-12T00:00:00.000Z" agent="Firmus Master System" etag="firmus-master-all" version="21.0.0" type="device">
+  
+  <!-- TAB 1: FLOWCHART CAT 1 -->
+  <diagram id="cat1_flowchart" name="1. Flowchart - Edge Sensing &amp; SoPoWake">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c1_start" value="Start / Power On (ESP32 Edge Node)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_init_hw" value="Inisialisasi GPIO, I2C MPU6050, SPI LoRa, ADC Soil, &amp; Hardware Interrupt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="120" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_bms_check" value="Cek BMS Battery Voltage&#xa;(Divider GPIO 36)&#xa;V_bat &lt; 3.2V?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="460" y="210" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_bms_protect" value="Deep Discharge Protection&#xa;Disable LoRa &amp; Siren, Enter Ultra Deep Sleep" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="740" y="225" width="250" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_cfg_wake" value="Konfigurasi Interrupt SoPoWake:&#xa;1. MPU6050 INT (Accel &gt; 0.15g / Tilt &gt; 2.0°)&#xa;2. Timer RTC (Heartbeat 30 Menit)&#xa;3. Rain Gauge Pulse Interrupt" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="330" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_sleep_mode" value="Masuk Mode ESP32 Deep Sleep&#xa;(Konsumsi Arus &lt; 15µA)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontStyle=1;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="430" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_wake_trigger" value="HARDWARE INTERRUPT TERPICU!&#xa;(MPU6050 / RTC Timer / Rain Gauge)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#E0E7FF;fontColor=#3730A3;strokeColor=#6366F1;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="530" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_read_sensors" value="Sampling 3 Sensor (Multi-Sensor Fusion):&#xa;1. MPU6050: ΔPitch &amp; ΔRoll (Sudut Kemiringan)&#xa;2. Capacitive Soil: Kelembapan Tanah (%)&#xa;3. Tipping Bucket: Presipitasi Hujan (mm/jam)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="650" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_calc_svi" value="Hitung Indeks Kerentanan Lereng (SVI):&#xa;SVI = (0.50 * Δθ/θmax) + (0.30 * Msoil/100) + (0.20 * Rrain/Rmax)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="760" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_dec_svi" value="Evaluasi Level SVI:&#xa;Tingkat Kerentanan?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="850" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_status_normal" value="SVI &lt; 0.40 (AMAN/STABIL)&#xa;Kemas Telemetri Heartbeat Rutin&#xa;Kembali ke Deep Sleep" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="860" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_status_waspada" value="0.40 ≤ SVI &lt; 0.65 (WASPADA) / 0.65 ≤ SVI &lt; 0.80 (SIAGA)&#xa;Tingkatkan Frekuensi Sampling &amp; Kirim Paket Alert LoRa" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="730" y="860" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_threshold_val" value="SVI ≥ 0.80 (POTENSI BAHAYA LONGSOR)&#xa;Masuk State THRESHOLD_VALIDATION&#xa;(Sampling Kontinu Window 5 Detik)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="980" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_dec_persistent" value="Apakah Gerakan Persisten &amp; Valid?&#xa;(Bukan Transient Noise/Guncangan Instan)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="1080" width="280" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_noise_log" value="Abaikan Noise Transient&#xa;Log Anomali Lokal ke Memori Internal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="150" y="1095" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c1_trigger_emergency" value="STATE EMERGENCY ALERT!&#xa;1. Aktifkan Relay Sirine Lokal 120dB (GPIO 26) &lt; 500ms&#xa;2. Broadcast Paket LoRa Darurat (Status: AWAS) ke Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1220" width="360" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" edge="1" parent="1" source="c1_start" target="c1_init_hw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e2" edge="1" parent="1" source="c1_init_hw" target="c1_bms_check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e3" edge="1" parent="1" source="c1_bms_check" target="c1_bms_protect" value="YA (V &lt; 3.2V)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=1.5;" />
+        <mxCell id="e4" edge="1" parent="1" source="c1_bms_check" target="c1_cfg_wake" value="TIDAK (V ≥ 3.2V)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;strokeWidth=1.5;" />
+        <mxCell id="e5" edge="1" parent="1" source="c1_cfg_wake" target="c1_sleep_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e6" edge="1" parent="1" source="c1_sleep_mode" target="c1_wake_trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#38BDF8;strokeWidth=2;fontColor=#38BDF8;" value="Wait Interrupt" />
+        <mxCell id="e7" edge="1" parent="1" source="c1_wake_trigger" target="c1_read_sensors" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e8" edge="1" parent="1" source="c1_read_sensors" target="c1_calc_svi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e9" edge="1" parent="1" source="c1_calc_svi" target="c1_dec_svi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e10" edge="1" parent="1" source="c1_dec_svi" target="c1_status_normal" value="SVI &lt; 0.40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;strokeWidth=1.5;" />
+        <mxCell id="e11" edge="1" parent="1" source="c1_dec_svi" target="c1_status_waspada" value="0.40 ≤ SVI &lt; 0.80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;strokeWidth=1.5;" />
+        <mxCell id="e12" edge="1" parent="1" source="c1_dec_svi" target="c1_threshold_val" value="SVI ≥ 0.80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=1.5;" />
+        <mxCell id="e13" edge="1" parent="1" source="c1_status_normal" target="c1_sleep_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" />
+        <mxCell id="e14" edge="1" parent="1" source="c1_threshold_val" target="c1_dec_persistent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;strokeWidth=1.5;" />
+        <mxCell id="e15" edge="1" parent="1" source="c1_dec_persistent" target="c1_noise_log" value="TIDAK (Noise)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748B;fontColor=#64748B;" />
+        <mxCell id="e16" edge="1" parent="1" source="c1_dec_persistent" target="c1_trigger_emergency" value="YA (Gerakan Valid)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=2;" />
+        <mxCell id="e17" edge="1" parent="1" source="c1_noise_log" target="c1_sleep_mode" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748B;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 2: ACTIVITY CAT 1 -->
+  <diagram id="cat1_activity" name="1. Activity - Edge Sensing &amp; SoPoWake">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sw_power" value="SUB-SISTEM POWER &amp; PANEL SURYA" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="400" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="p_bms" value="BMS &amp; Solar Panel CN3791&#xa;Mengisi Baterai 18650 6000mAh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#10B981;fontSize=11;" vertex="1" parent="sw_power">
+          <mxGeometry x="80" y="100" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p_ldo" value="HT7333-A LDO Regulator&#xa;Supplies Constant 3.3V (Quiescent 1.2µA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw_power">
+          <mxGeometry x="70" y="220" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="p_volt_read" value="Voltage Divider ADC Read&#xa;Send V_bat status to ESP32" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw_power">
+          <mxGeometry x="80" y="340" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw_sensor" value="HARDWARE SENSOR (MPU6050 / SOIL / RAIN)" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="40" width="440" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="s_mpu_detect" value="MPU6050 Motion Engine&#xa;Mendeteksi Getaran &gt; 0.15g / Tilt &gt; 2.0°" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw_sensor">
+          <mxGeometry x="80" y="430" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_int_pulse" value="Generate Hardware Interrupt Pulse (INT GPIO 33)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#E0E7FF;fontColor=#3730A3;strokeColor=#6366F1;fontSize=11;" vertex="1" parent="sw_sensor">
+          <mxGeometry x="70" y="530" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="s_analog_out" value="Capacitive Soil Moisture &amp; Rain Gauge&#xa;Supply Analog ADC Voltage &amp; Digital Pulses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw_sensor">
+          <mxGeometry x="70" y="650" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw_esp32" value="MIKROKONTROLER ESP32 (FIRMWARE &amp; SOPOWAKE ENGINE)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="40" width="480" height="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="e_boot" value="Start / Wakeup Event" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=12;fontStyle=1;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="150" y="60" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chk_v" value="Verify Battery Voltage ≥ 3.2V" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="130" y="150" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sleep" value="Enter Deep Sleep Mode (&lt;15µA)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=2;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="130" y="270" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_wake_proc" value="Process Wakeup Cause (Interrupt Handler)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="110" y="525" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_svi" value="Run Sensor Fusion &amp; Calculate SVI Index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="110" y="650" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e_eval_state" value="State Machine Decision&#xa;SVI &gt;= 0.80?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="140" y="760" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e_siren_act" value="ACTIVATE LOCAL SIREN RELAY (120dB)&#xa;&amp; Prepare LoRa Transmission" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw_esp32">
+          <mxGeometry x="100" y="880" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ae1" edge="1" parent="1" source="p_bms" target="p_ldo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae2" edge="1" parent="1" source="p_ldo" target="p_volt_read" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae3" edge="1" parent="1" source="p_volt_read" target="e_chk_v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="ae4" edge="1" parent="1" source="e_boot" target="e_chk_v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae5" edge="1" parent="1" source="e_chk_v" target="e_sleep" value="Valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="ae6" edge="1" parent="1" source="e_sleep" target="s_mpu_detect" value="Standby" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="ae7" edge="1" parent="1" source="s_mpu_detect" target="s_int_pulse" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="ae8" edge="1" parent="1" source="s_int_pulse" target="e_wake_proc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6366F1;" />
+        <mxCell id="ae9" edge="1" parent="1" source="e_wake_proc" target="s_analog_out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae10" edge="1" parent="1" source="s_analog_out" target="e_svi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="ae11" edge="1" parent="1" source="e_svi" target="e_eval_state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="ae12" edge="1" parent="1" source="e_eval_state" target="e_siren_act" value="AWAS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="ae13" edge="1" parent="1" source="e_eval_state" target="e_sleep" value="AMAN" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 3: FLOWCHART CAT 2 -->
+  <diagram id="cat2_flowchart" name="2. Flowchart - Transmisi LoRa &amp; Buffering">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2_start" value="Start: Sensor Sampling Complete" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_pack_struct" value="Pengemasan Payload Biner 16 Byte (FirmusPayload):&#xa;[node_id(1B) | bat_pct(1B) | pitch(2B) | roll(2B) | accel(2B) | soil(1B) | rain(2B) | status(1B) | timestamp(4B)]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="120" width="420" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_encrypt_aes" value="Enkripsi Payload Simetris AES-128 Bit&#xa;(Keamanan Data End-to-End RF)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="220" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_send_lora" value="Kirim Paket RF LoRa 915MHz via SX1276&#xa;(Power Out +20dBm, Bandwidth 125kHz)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=2;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="310" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_wait_ack" value="Tunggu Balasan ACK dari LoRa Gateway&#xa;(Timer Timeout = 1.5 Detik)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="400" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_dec_ack" value="Apakah ACK Diterima&#xa;Sebelum Timeout?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="460" y="490" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_spiffs_write" value="Koneksi Gateway Putus / Offline!&#xa;Tulis 16-Byte Struct ke SPIFFS Internal Flash&#xa;(Ring Buffer Ring Storage Max 500 Log)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="500" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_spiffs_check" value="ACK Terverifikasi!&#xa;Cek Buffer SPIFFS internal:&#xa;Apakah ada log offline tersimpan?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="610" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_flush_spiffs" value="Sinkronisasi Offline Data Buffering:&#xa;Kirim Log Terpenuhi dalam SPIFFS bertahap&#xa;kemudian Kosongkan Buffer Flash" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#065F46;fontColor=#FFFFFF;strokeColor=#059669;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="620" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_gw_receive" value="LoRa Gateway Menerima RF Packet" style="ellipse;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="460" y="740" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_gw_decrypt" value="Dekripsi AES-128 &amp; Unpack Binary Struct&#xa;Konversi ke JSON Telemetry Payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="830" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_mqtt_pub" value="Publish Telemetry via MQTT Protocol (Wi-Fi/GSM)&#xa;Topic: v1/devices/me/telemetry --&gt; ThingsBoard Server" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="390" y="920" width="360" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c2_end" value="End: Return to Deep Sleep" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1020" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e2_1" edge="1" parent="1" source="c2_start" target="c2_pack_struct" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_2" edge="1" parent="1" source="c2_pack_struct" target="c2_encrypt_aes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_3" edge="1" parent="1" source="c2_encrypt_aes" target="c2_send_lora" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_4" edge="1" parent="1" source="c2_send_lora" target="c2_wait_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_5" edge="1" parent="1" source="c2_wait_ack" target="c2_dec_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_6" edge="1" parent="1" source="c2_dec_ack" target="c2_spiffs_write" value="TIDAK (Timeout)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;" />
+        <mxCell id="e2_7" edge="1" parent="1" source="c2_dec_ack" target="c2_spiffs_check" value="YA (ACK Valid)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e2_8" edge="1" parent="1" source="c2_spiffs_check" target="c2_flush_spiffs" value="Ada Log Buffer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;" />
+        <mxCell id="e2_9" edge="1" parent="1" source="c2_spiffs_check" target="c2_gw_receive" value="Buffer Kosong" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e2_10" edge="1" parent="1" source="c2_flush_spiffs" target="c2_gw_receive" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="e2_11" edge="1" parent="1" source="c2_gw_receive" target="c2_gw_decrypt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_12" edge="1" parent="1" source="c2_gw_decrypt" target="c2_mqtt_pub" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_13" edge="1" parent="1" source="c2_mqtt_pub" target="c2_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e2_14" edge="1" parent="1" source="c2_spiffs_write" target="c2_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 4: ACTIVITY CAT 2 -->
+  <diagram id="cat2_activity" name="2. Activity - Transmisi LoRa &amp; Buffering">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sw2_node" value="EDGE SENSOR NODE (ESP32)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="440" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="an_start" value="Sensors Data Ready" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=12;fontStyle=1;" vertex="1" parent="sw2_node">
+          <mxGeometry x="130" y="60" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="an_pack" value="Construct 16-Byte Binary Struct &amp; Encrypt AES-128" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="80" y="150" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an_tx" value="Transmit Packet via LoRa SX1276 SPI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=2;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="90" y="250" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an_spiffs" value="Write to SPIFFS Ring Buffer Flash Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="90" y="400" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an_flush" value="Flush SPIFFS Buffered Data to Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="sw2_node">
+          <mxGeometry x="90" y="520" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw2_rf" value="KOMUNIKASI NIRKABEL LORA (915MHz RF)" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="40" width="440" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="ar_rf_tx" value="Propagation 915MHz RF Payload&#xa;(Coverage 2km NLOS / 10km LOS)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw2_rf">
+          <mxGeometry x="70" y="255" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ar_ack" value="Send LoRa ACK Frame to Edge Node" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#065F46;fontColor=#FFFFFF;strokeColor=#10B981;fontSize=11;" vertex="1" parent="sw2_rf">
+          <mxGeometry x="80" y="525" width="280" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw2_gw" value="LORA GATEWAY &amp; MQTT CLIENT SERVICE" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="40" width="440" height="950" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ag_recv" value="SX1276 Receiver Interrupt &amp; AES Decrypt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw2_gw">
+          <mxGeometry x="80" y="250" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ag_unpack" value="Unpack Struct &amp; Build JSON Telemetry Payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw2_gw">
+          <mxGeometry x="80" y="380" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ag_mqtt" value="Publish Telemetry via MQTT to Cloud (ThingsBoard)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="sw2_gw">
+          <mxGeometry x="70" y="650" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a2e1" edge="1" parent="1" source="an_start" target="an_pack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a2e2" edge="1" parent="1" source="an_pack" target="an_tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a2e3" edge="1" parent="1" source="an_tx" target="ar_rf_tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="a2e4" edge="1" parent="1" source="ar_rf_tx" target="ag_recv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a2e5" edge="1" parent="1" source="ag_recv" target="ar_ack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="a2e6" edge="1" parent="1" source="ar_ack" target="an_flush" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="a2e7" edge="1" parent="1" source="ag_recv" target="ag_unpack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a2e8" edge="1" parent="1" source="ag_unpack" target="ag_mqtt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 5: FLOWCHART CAT 3 -->
+  <diagram id="cat3_flowchart" name="3. Flowchart - Multi-Node Consensus Engine">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c3_start" value="Start: Incoming MQTT Telemetry Stream&#xa;(ThingsBoard Cloud Backend)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="30" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_store_log" value="Simpan Telemetri Mentah ke PostgreSQL (TELEMETRY_LOG):&#xa;[log_id, node_id, pitch, roll, accel, soil_moisture, rainfall, rssi, snr, timestamp]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="120" width="440" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_upd_node" value="Update Status SENSOR_NODE Table:&#xa;last_seen = NOW(), battery_level, status_code" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="220" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_chk_anomaly" value="Apakah Node A melaporkan&#xa;status WASPADA/SIAGA/AWAS&#xa;atau Anomali SVI ≥ 0.40?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="310" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_status_normal" value="Status Lereng AMAN&#xa;Update Dashboard Indicator (Neon Emerald)&#xa;Selesai - Tunggu Stream Berikutnya" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="120" y="325" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_consensus_query" value="Trigger Multi-Node Consensus Engine:&#xa;Query Node B &amp; Node C dalam Radius 100m (LOCATION_ZONE)&#xa;dalam Window Waktu 10 Detik Terakhir" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="440" width="400" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_eval_match" value="Evaluasi Konsensus Multi-Node:&#xa;Apakah ≥ 2 Node Terdekat&#xa;Mendeteksi Pergerakan Bahaya?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="550" width="300" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_false_alarm" value="KONSENSUS GAGAL (Hanya 1 Node Aktif)&#xa;Klasifikasi: ANOMALI LOKAL / FALSE ALARM&#xa;(Gangguan Hewan, Pohon Jatuh, Kendaraan)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;fontColor=#9A3412;strokeColor=#F97316;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="565" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_log_tech" value="Simpan ALERT_EVENT (multi_node_verified = false)&#xa;Kirim Notifikasi Silent Level 1 ke Aplikasi Mobile Teknisi&#xa;Cek fisik hardware disarankan (Sirine TIDAK Dipicu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="680" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_verify_true" value="KONSENSUS TERVERIFIKASI (≥ 2 Node Active)!&#xa;Status System: AWAS (BENCANA LONGSOR REAL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="410" y="690" width="340" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_save_alert" value="Catat ALERT_EVENT Table:&#xa;[alert_id, primary_node_id, triggered_at, alert_level='AWAS',&#xa;multi_node_verified=true, siren_activated=true, mobile_push_sent=true]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="790" width="400" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_dispatch" value="Dispatch Peringatan Darurat Hierarkis:&#xa;1. Konfirmasi Sirine Lokal 120dB Aktif (&lt; 500ms)&#xa;2. Push Notifikasi Mobile ke BPBD/TRC (&lt; 3 Detik)&#xa;3. Update Dashboard Tactical Map (Crimson Red Blinking)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="890" width="400" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c3_end" value="End: Alert Cycle Executed" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1000" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e3_1" edge="1" parent="1" source="c3_start" target="c3_store_log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_2" edge="1" parent="1" source="c3_store_log" target="c3_upd_node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_3" edge="1" parent="1" source="c3_upd_node" target="c3_chk_anomaly" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_4" edge="1" parent="1" source="c3_chk_anomaly" target="c3_status_normal" value="TIDAK (Normal)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e3_5" edge="1" parent="1" source="c3_chk_anomaly" target="c3_consensus_query" value="YA (Anomali)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;" />
+        <mxCell id="e3_6" edge="1" parent="1" source="c3_consensus_query" target="c3_eval_match" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_7" edge="1" parent="1" source="c3_eval_match" target="c3_false_alarm" value="NO (&lt; 2 Nodes)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F97316;fontColor=#F97316;" />
+        <mxCell id="e3_8" edge="1" parent="1" source="c3_eval_match" target="c3_verify_true" value="YES (≥ 2 Nodes)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=2;" />
+        <mxCell id="e3_9" edge="1" parent="1" source="c3_false_alarm" target="c3_log_tech" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F97316;" />
+        <mxCell id="e3_10" edge="1" parent="1" source="c3_verify_true" target="c3_save_alert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_11" edge="1" parent="1" source="c3_save_alert" target="c3_dispatch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_12" edge="1" parent="1" source="c3_dispatch" target="c3_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e3_13" edge="1" parent="1" source="c3_log_tech" target="c3_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 6: ACTIVITY CAT 3 -->
+  <diagram id="cat3_activity" name="3. Activity - Multi-Node Consensus Engine">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sw3_tb" value="THINGSBOARD MQTT TELEMETRY INGESTION" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="atb_mqtt" value="Receive Data Stream from LoRa Gateway" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=11;fontStyle=1;" vertex="1" parent="sw3_tb">
+          <mxGeometry x="60" y="60" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="atb_pass" value="Forward Payload to Rules Engine &amp; DB Store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw3_tb">
+          <mxGeometry x="50" y="150" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw3_db" value="POSTGRESQL / TIMESCALEDB STORAGE" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="adb_insert" value="INSERT INTO TELEMETRY_LOG&#xa;&amp; UPDATE SENSOR_NODE Status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw3_db">
+          <mxGeometry x="50" y="150" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="adb_spatial" value="Execute Spatial Query:&#xa;SELECT neighbor_nodes WHERE radius &lt; 100m AND time &gt; NOW()-10s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw3_db">
+          <mxGeometry x="40" y="360" width="260" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw3_engine" value="MULTI-NODE CONSENSUS ENGINE" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="40" width="360" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_trigger" value="Detect SVI Threshold Anomaly" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="80" y="240" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_calc" value="Cross-Validate Signals (Node A + B + C)&#xa;Count Active Hazard Nodes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="60" y="480" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_decision" value="Match ≥ 2 Nodes?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="90" y="580" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_true" value="Set multi_node_verified = true&#xa;Status: AWAS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="20" y="700" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aeng_false" value="Set multi_node_verified = false&#xa;Status: ANOMALI LOKAL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;fontColor=#9A3412;strokeColor=#F97316;fontSize=11;" vertex="1" parent="sw3_engine">
+          <mxGeometry x="190" y="700" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw3_dispatch" value="HIERARCHICAL ALERT DISPATCHER" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="40" width="280" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="adisp_call" value="Trigger Emergency Siren &amp; Broadcast Push Alert to Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw3_dispatch">
+          <mxGeometry x="30" y="700" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="adisp_silent" value="Send Silent Push Alert to Mobile App" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="sw3_dispatch">
+          <mxGeometry x="30" y="800" width="220" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a3e1" edge="1" parent="1" source="atb_mqtt" target="atb_pass" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a3e2" edge="1" parent="1" source="atb_pass" target="adb_insert" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a3e3" edge="1" parent="1" source="atb_pass" target="aeng_trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="a3e4" edge="1" parent="1" source="aeng_trigger" target="adb_spatial" value="Anomali" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a3e5" edge="1" parent="1" source="adb_spatial" target="aeng_calc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a3e6" edge="1" parent="1" source="aeng_calc" target="aeng_decision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a3e7" edge="1" parent="1" source="aeng_decision" target="aeng_true" value="≥2 Node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="a3e8" edge="1" parent="1" source="aeng_decision" target="aeng_false" value="1 Node" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F97316;" />
+        <mxCell id="a3e9" edge="1" parent="1" source="aeng_true" target="adisp_call" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="a3e10" edge="1" parent="1" source="aeng_false" target="adisp_silent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 7: FLOWCHART CAT 4 -->
+  <diagram id="cat4_flowchart" name="4. Flowchart - Peringatan Hierarkis &amp; Siren Override">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c4_start" value="Start: Hierarchical Alert Triggered" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_dec_level" value="Evaluasi Level Peringatan:&#xa;Tingkat Bahaya &amp; Target Receivers?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="120" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_lvl1" value="LEVEL 1 (WASPADA / ANOMALI LOKAL)&#xa;Kirim Push Notifikasi Silent ke Aplikasi Mobile Teknisi&#xa;Log Kesehatan Sensor &amp; Baterai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;fontColor=#475569;strokeColor=#94A3B8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="130" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_lvl2" value="LEVEL 2 (SIAGA)&#xa;Kirim Push Notifikasi Bersuara ke Aplikasi Mobile Warga &amp; RT/RW&#xa;Peringatan Awal Kesiapsiagaan Warga" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="130" width="300" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_lvl3_start" value="LEVEL 3 (AWAS - CONSENSUS VERIFIED)&#xa;Eksekusi Prosedur Darurat Bencana Mandiri" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="390" y="250" width="360" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_siren_on" value="AKSI SIRINE LOKAL (LATENSI &lt; 500ms):&#xa;Edge Node GPIO 26 Relay HIGH --&gt; Sirine 120dB &amp; Strobe Light AKTIF!" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B91C1C;fontColor=#FFFFFF;strokeColor=#7F1D1D;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="350" width="400" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_bot_prep" value="Mobile Push Service (FCM) Format Pesan Darurat (&lt; 3 Detik):&#xa;1. Detail Lokasi &amp; Link Google Maps Presisi&#xa;2. Metrik Telemetri (Tilt, Soil %, Temp °C, Consensus 2/3 Node)&#xa;3. Render Action Buttons pada Push Notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="360" y="450" width="420" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_bot_send" value="Kirim Emergency Push Broadcast to Mobile App Users &amp; BPBD" style="ellipse;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="560" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_user_action" value="Operator BPBD / Warga Menerima Alert &amp; Memilih Action Button:" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="420" y="650" width="300" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_act_trc" value="Tombol [📞 Panggil Tim TRC]&#xa;Memicu Panggilan Telepon Darurat &amp; Dispatch Mobil TRC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="770" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_act_telemetry" value="Tombol [📊 Cek Telemetri]&#xa;Aplikasi Mobile Mengirimkan Grafik Real-time Sensor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="840" y="770" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_act_override" value="Tombol [🔊 Matikan Sirine] (Remote Override)&#xa;Otentikasi PIN &amp; Perintah Meredam Sirine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9A3412;fontColor=#FFFFFF;strokeColor=#EA580C;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="770" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_downlink_lora" value="Backend Mengirimkan LoRa Downlink Packet (SIREN_OFF)&#xa;via LoRa Gateway --&gt; Sensor Node" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="860" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_siren_off" value="Node Menerima Downlink &amp; Set GPIO 26 Relay LOW&#xa;(Sirine Lokal Dimatikan Berhasil)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="950" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_bot_update" value="Aplikasi Mobile Memperbarui Status Pesan Notifikasi:&#xa;[🔊 Sirine Dimatikan oleh Operator BPBD (19:45 WIB)]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="1040" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4_end" value="End: Emergency Alert Handled" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="1130" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e4_1" edge="1" parent="1" source="c4_start" target="c4_dec_level" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_2" edge="1" parent="1" source="c4_dec_level" target="c4_lvl1" value="Level 1 (Waspada)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;fontColor=#475569;" />
+        <mxCell id="e4_3" edge="1" parent="1" source="c4_dec_level" target="c4_lvl2" value="Level 2 (Siaga)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;fontColor=#F59E0B;" />
+        <mxCell id="e4_4" edge="1" parent="1" source="c4_dec_level" target="c4_lvl3_start" value="Level 3 (AWAS)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;strokeWidth=2;" />
+        <mxCell id="e4_5" edge="1" parent="1" source="c4_lvl3_start" target="c4_siren_on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_6" edge="1" parent="1" source="c4_siren_on" target="c4_bot_prep" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_7" edge="1" parent="1" source="c4_bot_prep" target="c4_bot_send" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_8" edge="1" parent="1" source="c4_bot_send" target="c4_user_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_9" edge="1" parent="1" source="c4_user_action" target="c4_act_trc" value="Klik Panggil TRC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;fontColor=#3B82F6;" />
+        <mxCell id="e4_10" edge="1" parent="1" source="c4_user_action" target="c4_act_telemetry" value="Klik Telemetri" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;fontColor=#3B82F6;" />
+        <mxCell id="e4_11" edge="1" parent="1" source="c4_user_action" target="c4_act_override" value="Klik Matikan Sirine" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EA580C;fontColor=#EA580C;strokeWidth=2;" />
+        <mxCell id="e4_12" edge="1" parent="1" source="c4_act_override" target="c4_downlink_lora" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_13" edge="1" parent="1" source="c4_downlink_lora" target="c4_siren_off" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_14" edge="1" parent="1" source="c4_siren_off" target="c4_bot_update" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_15" edge="1" parent="1" source="c4_bot_update" target="c4_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e4_16" edge="1" parent="1" source="c4_act_trc" target="c4_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" />
+        <mxCell id="e4_17" edge="1" parent="1" source="c4_act_telemetry" target="c4_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 8: ACTIVITY CAT 4 -->
+  <diagram id="cat4_activity" name="4. Activity - Hierarchical Alert &amp; Siren Override">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sw4_node" value="EDGE SENSOR NODE (HARDWARE &amp; SIREN)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="an4_siren" value="Set GPIO 26 Relay HIGH&#xa;Sound 120dB Siren &amp; Flash Strobe (&lt;500ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DC2626;fontColor=#FFFFFF;strokeColor=#991B1B;fontStyle=1;fontSize=11;" vertex="1" parent="sw4_node">
+          <mxGeometry x="40" y="150" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an4_downlink" value="Receive Encrypted LoRa Downlink Command (SIREN_OFF)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw4_node">
+          <mxGeometry x="30" y="650" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="an4_off" value="Set GPIO 26 Relay LOW (Siren Deactivated)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontSize=11;" vertex="1" parent="sw4_node">
+          <mxGeometry x="40" y="760" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw4_bot" value="MOBILE PUSH SERVICE BACKEND (FCM)" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="360" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_start" value="Receive Verified AWAS Trigger" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=11;fontStyle=1;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="80" y="60" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_format" value="Format Push Alert Payload + Google Maps Link + Action Buttons" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="40" y="270" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_send" value="Dispatch Mobile Push Notification to BPBD &amp; Users (&lt;3s)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="40" y="370" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_callback" value="Process Action: Button [🔊 Matikan Sirine] Clicked" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#9A3412;fontColor=#FFFFFF;strokeColor=#EA580C;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="30" y="540" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="abot_downlink" value="Send LoRa Downlink to Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw4_bot">
+          <mxGeometry x="60" y="650" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw4_op" value="OPERATOR BPBD / USER (FLUTTER APP)" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="aop_recv" value="Receive Loud Mobile Push Alert Notification" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EF4444;fontColor=#FFFFFF;strokeColor=#B91C1C;fontSize=11;fontStyle=1;" vertex="1" parent="sw4_op">
+          <mxGeometry x="50" y="370" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="aop_click" value="Review Map &amp; Click Inline Button [🔊 Matikan Sirine]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw4_op">
+          <mxGeometry x="40" y="470" width="260" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw4_gw" value="LORA GATEWAY DOWNLINK" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="40" width="280" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="agw_tx" value="Broadcast Downlink Frame via SX1276 RF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw4_gw">
+          <mxGeometry x="30" y="650" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a4e1" edge="1" parent="1" source="abot_start" target="an4_siren" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;" />
+        <mxCell id="a4e2" edge="1" parent="1" source="abot_start" target="abot_format" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a4e3" edge="1" parent="1" source="abot_format" target="abot_send" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a4e4" edge="1" parent="1" source="abot_send" target="aop_recv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;" />
+        <mxCell id="a4e5" edge="1" parent="1" source="aop_recv" target="aop_click" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a4e6" edge="1" parent="1" source="aop_click" target="abot_callback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="a4e7" edge="1" parent="1" source="abot_callback" target="abot_downlink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a4e8" edge="1" parent="1" source="abot_downlink" target="agw_tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a4e9" edge="1" parent="1" source="agw_tx" target="an4_downlink" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="a4e10" edge="1" parent="1" source="an4_downlink" target="an4_off" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 9: FLOWCHART CAT 5 -->
+  <diagram id="cat5_flowchart" name="5. Flowchart - Gotham-Friendly UI Interaction">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c5_start" value="Start: Access Web Dashboard UI" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="30" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_auth" value="Otentikasi User &amp; JWT Token Validation" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="120" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_login" value="Redirect to Login Page&#xa;Input Username &amp; Password / OTP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="130" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_theme_load" value="Load Gotham Theme Engine:&#xa;Background: #090D16 | Card: #131B2E | Border: #1E293B&#xa;Establish WebSocket Stream Connection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;strokeWidth=1.5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="230" width="320" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_mode_select" value="Cek Mode Layar Pengguna:&#xa;Mode Switcher Selection?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#E0E7FF;fontColor=#3730A3;strokeColor=#6366F1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="450" y="330" width="240" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_simple_mode" value="MODE SEDERHANA (Warga / Lurah / Awam):&#xa;1. Top Banner Status Bahasa Natural ('KONDISI LERENG STABIL')&#xa;2. Peta Kontur Sederhana + Pin Neon Node (Hijau/Kuning/Merah)&#xa;3. Tombol Bantuan Darurat 1-Klik" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1FAE5;fontColor=#065F46;strokeColor=#10B981;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="450" width="340" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_tactical_mode" value="MODE TAKTIS (BPBD / Operator TRC / Teknisi):&#xa;1. Peta Spasial GIS 3D/2D + Toggle Layer (Topografi, Soil, LoRa)&#xa;2. Graph Konsensus Node-Link Palantir Gotham Overlay&#xa;3. Metrik Telemetri Lengkap (Angle Δθ, Soil %, Rain, RSSI/SNR)&#xa;4. Action Center Kendali Taktis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="700" y="450" width="360" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_action_center" value="User Berinteraksi di Action Center:&#xa;Klik [🔊 Uji Sirine Lokal] (Pengujian Bulanan)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="580" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_pin_modal" value="Tampilkan Modal Dialogue PIN Keamanan:&#xa;Input Security PIN Pengujian?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="680" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_pin_invalid" value="PIN Salah! Tampilkan Warning Toast Notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;fontColor=#991B1B;strokeColor=#EF4444;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="695" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_api_test" value="Kirim Request REST API POST /api/v1/siren/test (Duration: 5s)&#xa;Backend Dispatches Test Downlink to Edge Node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="800" width="380" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_siren_test_run" value="Edge Node Sirine Berbunyi Selama 5 Detik &amp; Off Otomatis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="400" y="900" width="340" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_audit_log" value="Dashboard Memperbarui Log Keberhasilan Pengujian&#xa;Catat ke Audit Trail Log Database" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="410" y="990" width="320" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c5_end" value="End: User Session Active" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="1080" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e5_1" edge="1" parent="1" source="c5_start" target="c5_auth" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_2" edge="1" parent="1" source="c5_auth" target="c5_login" value="Invalid Token" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;" />
+        <mxCell id="e5_3" edge="1" parent="1" source="c5_auth" target="c5_theme_load" value="Valid Token" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e5_4" edge="1" parent="1" source="c5_theme_load" target="c5_mode_select" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_5" edge="1" parent="1" source="c5_mode_select" target="c5_simple_mode" value="Mode Sederhana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e5_6" edge="1" parent="1" source="c5_mode_select" target="c5_tactical_mode" value="Mode Taktis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6366F1;fontColor=#6366F1;" />
+        <mxCell id="e5_7" edge="1" parent="1" source="c5_simple_mode" target="c5_action_center" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_8" edge="1" parent="1" source="c5_tactical_mode" target="c5_action_center" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_9" edge="1" parent="1" source="c5_action_center" target="c5_pin_modal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_10" edge="1" parent="1" source="c5_pin_modal" target="c5_pin_invalid" value="PIN Salah" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#EF4444;fontColor=#EF4444;" />
+        <mxCell id="e5_11" edge="1" parent="1" source="c5_pin_modal" target="c5_api_test" value="PIN Valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;fontColor=#10B981;" />
+        <mxCell id="e5_12" edge="1" parent="1" source="c5_api_test" target="c5_siren_test_run" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_13" edge="1" parent="1" source="c5_siren_test_run" target="c5_audit_log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_14" edge="1" parent="1" source="c5_audit_log" target="c5_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="e5_15" edge="1" parent="1" source="c5_pin_invalid" target="c5_action_center" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748B;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- TAB 10: ACTIVITY CAT 5 -->
+  <diagram id="cat5_activity" name="5. Activity - Gotham-Friendly UI Interaction">
+    <mxGraphModel dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sw5_user" value="PENGGUNA (WARGA / LURAH / BPBD OPERATOR)" style="swimlane;startSize=30;fillColor=#090D16;fontColor=#F8FAFC;strokeColor=#1E293B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="au5_open" value="Access Dashboard Web URL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#ffffff;strokeColor=#059669;fontSize=11;fontStyle=1;" vertex="1" parent="sw5_user">
+          <mxGeometry x="60" y="60" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="au5_toggle" value="Toggle Mode: Simple vs Tactical" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw5_user">
+          <mxGeometry x="50" y="270" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="au5_click" value="Click [🔊 Uji Sirine] in Action Center &amp; Enter PIN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;fontColor=#92400E;strokeColor=#F59E0B;fontSize=11;" vertex="1" parent="sw5_user">
+          <mxGeometry x="30" y="520" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw5_client" value="WEB DASHBOARD PRESENTATION LAYER (GOTHAM UI)" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="40" width="380" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="acl5_render" value="Render Gotham Dark UI (#090D16) &amp; Open WebSocket" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;fontColor=#38BDF8;strokeColor=#0EA5E9;fontSize=11;" vertex="1" parent="sw5_client">
+          <mxGeometry x="40" y="160" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acl5_view" value="Switch View: Simple Status Banner or Tactical GIS 3D Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw5_client">
+          <mxGeometry x="40" y="270" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acl5_post" value="Send REST API Request POST /siren/test with PIN Payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3B82F6;fontColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;" vertex="1" parent="sw5_client">
+          <mxGeometry x="40" y="520" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw5_cloud" value="THINGSBOARD / CLOUD API BACKEND" style="swimlane;startSize=30;fillColor=#1E1E2E;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="40" width="320" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="acld5_verify" value="Verify JWT Auth Token &amp; Streams Spatial Telemetry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#3B82F6;fontSize=11;" vertex="1" parent="sw5_cloud">
+          <mxGeometry x="40" y="160" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acld5_pin" value="Verify Security PIN &amp; Trigger LoRa Gateway Downlink" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#312E81;fontColor=#EEF2FF;strokeColor=#818CF8;fontSize=11;" vertex="1" parent="sw5_cloud">
+          <mxGeometry x="40" y="520" width="240" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="acld5_log" value="Log Action to Audit Trail Database" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;fontColor=#F8FAFC;strokeColor=#64748B;fontSize=11;" vertex="1" parent="sw5_cloud">
+          <mxGeometry x="40" y="760" width="240" height="50" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sw5_node" value="HARDWARE EDGE SENSOR NODE" style="swimlane;startSize=30;fillColor=#0F172A;fontColor=#F8FAFC;strokeColor=#334155;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="40" width="280" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="anode5_siren" value="Sound Siren 120dB for 5 Seconds &amp; Auto Off" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10B981;fontColor=#FFFFFF;strokeColor=#059669;fontStyle=1;fontSize=11;" vertex="1" parent="sw5_node">
+          <mxGeometry x="30" y="640" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a5e1" edge="1" parent="1" source="au5_open" target="acld5_verify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+        <mxCell id="a5e2" edge="1" parent="1" source="acld5_verify" target="acl5_render" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0EA5E9;" />
+        <mxCell id="a5e3" edge="1" parent="1" source="au5_toggle" target="acl5_view" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3B82F6;" />
+        <mxCell id="a5e4" edge="1" parent="1" source="au5_click" target="acl5_post" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#F59E0B;" />
+        <mxCell id="a5e5" edge="1" parent="1" source="acl5_post" target="acld5_pin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#818CF8;" />
+        <mxCell id="a5e6" edge="1" parent="1" source="acld5_pin" target="anode5_siren" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#10B981;" />
+        <mxCell id="a5e7" edge="1" parent="1" source="anode5_siren" target="acld5_log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#94A3B8;" />
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

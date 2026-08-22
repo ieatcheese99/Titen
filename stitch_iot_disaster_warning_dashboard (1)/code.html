@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mount Lawu Sector 3 - Monitoring</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#2a1700",
+                        "surface-tint": "#00668a",
+                        "secondary-container": "#d0e1fb",
+                        "on-surface-variant": "#3e484f",
+                        "outline": "#6e7980",
+                        "status-siaga": "#F97316",
+                        "on-background": "#191c1e",
+                        "primary-fixed": "#c4e7ff",
+                        "tertiary-container": "#f1a02b",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#38bdf8",
+                        "primary-fixed-dim": "#7bd0ff",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "surface": "#FFFFFF",
+                        "inverse-primary": "#7bd0ff",
+                        "outline-variant": "#bdc8d1",
+                        "status-waspada": "#F59E0B",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-container": "#004965",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f2f4f6",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-tertiary-container": "#613b00",
+                        "on-secondary-container": "#54647a",
+                        "background": "#f8fafc",
+                        "surface-bright": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "primary": "#38BDF8",
+                        "secondary-fixed": "#d3e4fe",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-fixed": "#001e2c",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "surface-container": "#eceef0",
+                        "status-aman": "#10B981",
+                        "text-main": "#0F172A",
+                        "inverse-on-surface": "#eff1f3",
+                        "secondary": "#505f76",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "on-surface": "#191c1e",
+                        "tertiary": "#855300",
+                        "tertiary-fixed-dim": "#ffb960",
+                        "border": "#E2E8F0",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-fixed-variant": "#004c69",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "status-awas": "#EF4444",
+                        "on-secondary-fixed": "#0b1c30",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "32px",
+                        "margin-mobile": "16px",
+                        "card-padding": "16px",
+                        "unit": "4px",
+                        "component-gap": "8px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["manrope"],
+                        "data-label": ["jetbrainsMono"],
+                        "data-display": ["jetbrainsMono"],
+                        "headline-lg": ["manrope"],
+                        "headline-lg-mobile": ["manrope"],
+                        "body-lg": ["manrope"],
+                        "body-md": ["manrope"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "data-label": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "400" }],
+                        "data-display": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "30px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; background-color: #f8fafc; color: #0F172A; }
+        .font-mono-data { font-family: 'JetBrains Mono', monospace; }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #E2E8F0 1px, transparent 1px),
+                              linear-gradient(to bottom, #E2E8F0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .pulse-emerald {
+            animation: pulseEmerald 2s infinite;
+        }
+        @keyframes pulseEmerald {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .sparkline {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 3s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background min-h-screen relative pb-20 md:pb-0">
+<!-- Global Grid Overlay (Tactical Grid) -->
+<div class="fixed inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none z-0"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-surface border-b border-outline-variant flat no shadows transition-colors duration-200 ease-in-out md:px-margin-desktop">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">signal_cellular_alt</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tighter text-text-main md:font-headline-lg md:text-headline-lg">TERRA_WATCH</span>
+</div>
+<!-- Desktop Nav -->
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-on-surface-variant hover:bg-surface-container-low px-3 py-1 rounded transition-colors duration-200 font-body-md" href="#">Status</a>
+<a class="text-primary font-bold hover:bg-surface-container-low px-3 py-1 rounded transition-colors duration-200 font-body-md" href="#">Maps</a>
+<a class="text-on-surface-variant hover:bg-surface-container-low px-3 py-1 rounded transition-colors duration-200 font-body-md" href="#">Logs</a>
+<a class="text-on-surface-variant hover:bg-surface-container-low px-3 py-1 rounded transition-colors duration-200 font-body-md" href="#">Alerts</a>
+</nav>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded transition-colors duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="relative z-10 pt-20 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto space-y-6">
+<!-- Header -->
+<div class="flex justify-between items-end border-b border-border pb-4">
+<div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-text-main">Mount Lawu Sector 3</h1>
+<p class="font-data-label text-data-label text-on-surface-variant uppercase mt-1">Sistem Telemetri Aktif</p>
+</div>
+<div class="font-mono-data text-sm text-outline hidden md:block">
+                SYS.TIME: <span class="text-text-main font-medium" id="clock"></span>
+</div>
+</div>
+<!-- Status Banner -->
+<div class="bg-status-aman/10 border border-status-aman rounded-lg p-card-padding flex items-center gap-4 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-status-aman"></div>
+<div class="w-10 h-10 rounded-full bg-status-aman/20 flex items-center justify-center pulse-emerald">
+<span class="material-symbols-outlined text-status-aman" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-text-main">AMAN — Tidak Ada Anomali Terdeteksi</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Semua sensor beroperasi dalam parameter normal.</p>
+</div>
+</div>
+<!-- Telemetry Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-component-gap">
+<!-- Kelembapan Tanah -->
+<div class="bg-surface border border-border rounded-lg p-card-padding relative group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-on-surface-variant uppercase">Kelembapan Tanah</span>
+<span class="material-symbols-outlined text-primary text-sm">water_drop</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-data-display text-data-display text-text-main text-3xl font-bold">45</span>
+<span class="font-mono-data text-sm text-outline mb-1">%</span>
+</div>
+<div class="h-10 w-full mt-4">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 20">
+<path class="sparkline" d="M0,15 Q25,5 50,15 T100,5" fill="none" stroke="#38BDF8" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Suhu -->
+<div class="bg-surface border border-border rounded-lg p-card-padding relative group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-on-surface-variant uppercase">Suhu</span>
+<span class="material-symbols-outlined text-status-waspada text-sm">thermostat</span>
+</div>
+<div class="flex items-end gap-2">
+<span class="font-data-display text-data-display text-text-main text-3xl font-bold">24</span>
+<span class="font-mono-data text-sm text-outline mb-1">°C</span>
+</div>
+<div class="h-10 w-full mt-4">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 20">
+<path class="sparkline" d="M0,10 Q25,18 50,10 T100,8" fill="none" stroke="#F59E0B" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Land Tilt (Pergeseran Tanah) -->
+<div class="bg-surface border border-border rounded-lg p-card-padding relative group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-data-label text-data-label text-on-surface-variant uppercase">Kemiringan Lahan</span>
+<span class="material-symbols-outlined text-primary text-sm">landscape</span>
+</div>
+<div class="flex items-end gap-2 mb-4">
+<span class="font-data-display text-data-display text-text-main text-3xl font-bold">0.02</span>
+<span class="font-mono-data text-sm text-outline mb-1">°</span>
+</div>
+<!-- Tactical Segmented Progress -->
+<div class="flex gap-1 h-3 mt-auto">
+<div class="flex-1 bg-status-aman rounded-sm"></div>
+<div class="flex-1 bg-status-aman opacity-50 rounded-sm"></div>
+<div class="flex-1 bg-surface-container-high rounded-sm"></div>
+<div class="flex-1 bg-surface-container-high rounded-sm"></div>
+<div class="flex-1 bg-surface-container-high rounded-sm"></div>
+</div>
+</div>
+</div>
+<!-- Map Section -->
+<div class="bg-surface border border-border rounded-lg overflow-hidden h-[400px] relative">
+<div class="absolute top-0 left-0 w-full p-3 bg-white/90 backdrop-blur-md border-b border-border z-10 flex justify-between items-center">
+<span class="font-data-label text-data-label text-text-main font-bold">Peta Sektor</span>
+<span class="font-mono-data text-xs text-outline">COORD: -7.6271, 111.1923</span>
+</div>
+<!-- Map Image Placeholder -->
+<div class="w-full h-full bg-surface-container-low flex items-center justify-center relative">
+<div class="absolute inset-0 bg-cover bg-center opacity-40" data-alt="A highly detailed, top-down tactical map interface in a bright, modern light mode aesthetic. The map features a clinical, slate-colored topographical landscape with fine-line grid overlays. At the center, a vibrant emerald green node pulses with data metrics in monospace fonts connecting to surrounding terrain points. The lighting is crisp and professional, reminiscent of aerospace monitoring equipment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBZwn6efAyiSBTZxfAeOpLZutiN3i8Tk3jsjuRx9DRWalRfew8suTHwBAB5c6LCXMxdF2HaZbaA4rUp_XmuE1QK5kdBPX_-lCuzdnxr0OUlkHGFnxLNjfxcbNMeZPHzDEG2y1aE8Y9B841rgsN7U1SOFskajX7l2Ty4_V5w9DK8didamBccGz-pDT0nYtytFqiWzPFc8JBosdeLVWOtWMYrisoR0hDAFDR4pmtsrVAKpEGDqGHflPO0GA')"></div>
+<!-- Tactical Map Grid Lines (Overlay) -->
+<div class="absolute inset-0 bg-[linear-gradient(rgba(226,232,240,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(226,232,240,0.5)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+<!-- Pulsing Node on Map -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center">
+<div class="w-4 h-4 bg-status-aman rounded-full pulse-emerald border-2 border-white shadow-sm"></div>
+<div class="mt-2 bg-white/90 backdrop-blur-sm border border-border px-2 py-1 rounded shadow-sm text-center">
+<div class="font-data-label text-data-label text-text-main font-bold">NODE Alpha</div>
+<div class="font-mono-data text-[10px] text-status-aman">AKTIF</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile py-2 bg-surface border-t border-outline-variant flat no shadows md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-data-label text-data-label">Status</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary font-bold bg-primary-container/10 rounded-xl px-3 py-1 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="font-data-label text-data-label">Maps</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1">list_alt</span>
+<span class="font-data-label text-data-label">Logs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1">notification_important</span>
+<span class="font-data-label text-data-label">Alerts</span>
+</a>
+</nav>
+<script>
+        // Simple clock for telemetry realism
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour12: false }) + '.' + now.getMilliseconds().toString().padStart(3, '0');
+            const clockEl = document.getElementById('clock');
+            if(clockEl) clockEl.textContent = timeString;
+        }
+        setInterval(updateClock, 100);
+        updateClock();
+    </script>
+</body></html>

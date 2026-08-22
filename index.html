@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TITEN - Sistem Peringatan Dini Tanah Longsor & Kebakaran Hutan</title>
+  
+  <!-- Google Fonts: Manrope (UI & Headings), JetBrains Mono (Telemetry & Data) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Material Symbols Outlined -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Firmus Tactical Light Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="light-mode">
+
+  <!-- Application Main Shell Container (Mobile Frame Simulator) -->
+  <div class="app-shell" id="appShell">
+    
+    <!-- Mobile Status Bar (Flutter Native Header) -->
+    <div class="mobile-status-bar">
+      <div class="status-bar-time" id="mobileClock">19:42</div>
+      <div class="status-bar-notch">
+        <span class="notch-camera"></span>
+      </div>
+      <div class="status-bar-icons">
+        <i class="fa-solid fa-signal text-xs"></i>
+        <i class="fa-solid fa-wifi text-xs"></i>
+        <i class="fa-solid fa-battery-three-quarters text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Flutter Top App Bar (SliverAppBar Light Aesthetic) -->
+    <header class="flutter-app-bar">
+      <div class="app-bar-top">
+        <div class="brand-badge">
+          <div class="brand-icon">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield_with_house</span>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">TITEN <span class="brand-tag">EWS LIGHT</span></h1>
+            <p class="brand-subtitle">DETEKSI LONGSOR & KARHUTLA</p>
+          </div>
+        </div>
+
+        <div class="app-bar-actions">
+          <!-- Gateway Status Badge -->
+          <div class="gateway-chip" title="Status LoRa Gateway">
+            <span class="pulse-dot green"></span>
+            <span class="chip-label hidden-xs">LoRa Gateway: <strong>ONLINE</strong></span>
+          </div>
+
+          <!-- Viewport Mode Toggle (Frame vs Full View) -->
+          <button class="icon-action-btn" id="btnToggleFrame" onclick="toggleMobileFrameView()" title="Ganti Mode Tampilan (Frame Mobile / Full Screen)">
+            <span class="material-symbols-outlined">smartphone</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Threat Simulator Bar (Interactive Demo Controller) -->
+      <div class="sim-bar-wrapper">
+        <div class="sim-label"><i class="fa-solid fa-flask"></i> Simulasi:</div>
+        <div class="sim-pills-scroll">
+          <button class="sim-pill sim-aman active" onclick="triggerSimulation('aman')">🟢 Aman</button>
+          <button class="sim-pill sim-waspada-longsor" onclick="triggerSimulation('waspada_longsor')">🟡 Waspada Longsor</button>
+          <button class="sim-pill sim-waspada-karhutla" onclick="triggerSimulation('waspada_karhutla')">🟧 Waspada Karhutla</button>
+          <button class="sim-pill sim-siaga" onclick="triggerSimulation('siaga')">🔔 Siaga</button>
+          <button class="sim-pill sim-awas-longsor" onclick="triggerSimulation('awas_longsor')">🚨 AWAS LONGSOR</button>
+          <button class="sim-pill sim-awas-karhutla" onclick="triggerSimulation('awas_karhutla')">🔥 AWAS KARHUTLA</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Scrollable Screen Content Container -->
+    <main class="screen-content">
+
+      <!-- ==================================================================
+           TAB 1: STATUS & TELEMETRY SCREEN (DEFAULT)
+           ================================================================== -->
+      <section class="tab-screen active" id="tabStatus">
+        
+        <!-- Hero Dynamic Status Banner Card -->
+        <div class="hero-status-card status-aman-style" id="mainStatusCard">
+          <div class="card-edge-strip"></div>
+          <div class="status-icon-box" id="statusIconBox">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+          </div>
+          <div class="status-content">
+            <div class="status-header-row">
+              <span class="status-badge" id="statusBadgeLabel">SECTOR 3 — STABIL & AMAN</span>
+              <span class="status-time-mono" id="lastUpdateTime">19:42:00 WIB</span>
+            </div>
+            <h2 class="status-title-text" id="statusTitle">KONDISI LERENG &amp; HUTAN STABIL</h2>
+            <p class="status-desc-text" id="statusDesc">Seluruh 3 node sensor beroperasi normal. Tidak ada pergeseran tanah maupun titik panas kebakaran terdeteksi.</p>
+            
+            <div class="status-meta-bar">
+              <div class="meta-item">
+                <i class="fa-solid fa-network-wired"></i>
+                <span>Konsensus Node: <strong id="consensusRatioText">3/3 SEPAKAT (100%)</strong></span>
+              </div>
+              <div class="meta-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Zona: <strong>Lereng &amp; Hutan Banyuasin</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Bento Grid (6 Key Physical Metrics) -->
+        <div class="section-header">
+          <h3 class="section-title"><i class="fa-solid fa-gauge-high"></i> Telemetri Fisik Real-Time</h3>
+          <span class="mono-tag">DHT22 + MPU6050 + CAPACITIVE</span>
+        </div>
+
+        <div class="bento-grid">
+          <!-- 1. Kemiringan Lahan (Land Tilt) -->
+          <div class="telemetry-card">
+            <div class="telemetry-header">
+              <span class="mono-label">KEMIRINGAN LAHAN</span>
+              <span class="material-symbols-outlined card-icon text-sky">landscape</span>
+            </div>
+            <div class="telemetry-body">
+              <div class="telemetry-value-box">
+                <span class="telemetry-num" id="valTilt">1.2</span>
+                <span class="telemetry-unit">° Pitch/Roll</span>
+              </div>
+              <div class="telemetry-sub" id="subTilt"><i class="fa-solid fa-check text-emerald"></i> Normal (&lt; 2.0°)</div>
+            </div>
+            <div class="sparkline-container">
+              <svg class="sparkline-svg" viewBox="0 0 100 20" preserveAspectRatio="none">
+                <path id="sparkTilt" d="M0,15 Q25,5 50,15 T100,5" fill="none" stroke="#0284C7" stroke-width="2.5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 2. Kelembapan Tanah (Soil Moisture) -->
+          <div class="telemetry-card">
+            <div class="telemetry-header">
+              <span class="mono-label">KELEMBAPAN TANAH</span>
+              <span class="material-symbols-outlined card-icon text-blue">water_drop</span>
+            </div>
+            <div class="telemetry-body">
+              <div class="telemetry-value-box">
+                <span class="telemetry-num" id="valSoil">65</span>
+                <span class="telemetry-unit">% VWC</span>
+              </div>
+              <div class="telemetry-sub" id="subSoil"><i class="fa-solid fa-check text-emerald"></i> Optimal (&lt; 80%)</div>
+            </div>
+            <div class="sparkline-container">
+              <svg class="sparkline-svg" viewBox="0 0 100 20" preserveAspectRatio="none">
+                <path id="sparkSoil" d="M0,10 Q25,18 50,10 T100,8" fill="none" stroke="#3B82F6" stroke-width="2.5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 3. Suhu Udara (Air Temperature - DHT22) -->
+          <div class="telemetry-card">
+            <div class="telemetry-header">
+              <span class="mono-label">SUHU UDARA (DHT22)</span>
+              <span class="material-symbols-outlined card-icon text-amber">thermostat</span>
+            </div>
+            <div class="telemetry-body">
+              <div class="telemetry-value-box">
+                <span class="telemetry-num" id="valTemp">26.5</span>
+                <span class="telemetry-unit">°C Udara</span>
+              </div>
+              <div class="telemetry-sub" id="subTemp"><i class="fa-solid fa-check text-emerald"></i> Sejuk (&lt; 35°C)</div>
+            </div>
+            <div class="sparkline-container">
+              <svg class="sparkline-svg" viewBox="0 0 100 20" preserveAspectRatio="none">
+                <path id="sparkTemp" d="M0,12 Q25,8 50,14 T100,10" fill="none" stroke="#F59E0B" stroke-width="2.5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 4. Kelembapan Udara (Air Humidity - DHT22) -->
+          <div class="telemetry-card">
+            <div class="telemetry-header">
+              <span class="mono-label">KELEMBAPAN UDARA</span>
+              <span class="material-symbols-outlined card-icon text-teal">humidity_percentage</span>
+            </div>
+            <div class="telemetry-body">
+              <div class="telemetry-value-box">
+                <span class="telemetry-num" id="valHumidity">72</span>
+                <span class="telemetry-unit">% RH</span>
+              </div>
+              <div class="telemetry-sub" id="subHumidity"><i class="fa-solid fa-check text-emerald"></i> Lembap Udara</div>
+            </div>
+            <div class="sparkline-container">
+              <svg class="sparkline-svg" viewBox="0 0 100 20" preserveAspectRatio="none">
+                <path id="sparkHumidity" d="M0,8 Q25,14 50,7 T100,11" fill="none" stroke="#14B8A6" stroke-width="2.5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 5. Indeks Risiko Karhutla (FDI - Fire Danger Index) -->
+          <div class="telemetry-card">
+            <div class="telemetry-header">
+              <span class="mono-label">INDEKS KARHUTLA (FDI)</span>
+              <span class="material-symbols-outlined card-icon text-flame">local_fire_department</span>
+            </div>
+            <div class="telemetry-body">
+              <div class="telemetry-value-box">
+                <span class="telemetry-num" id="valFDI">0.12</span>
+                <span class="telemetry-unit">/ 1.0</span>
+              </div>
+              <div class="telemetry-sub" id="subFDI"><i class="fa-solid fa-shield text-emerald"></i> AMAN KARHUTLA</div>
+            </div>
+            <!-- Segmented Progress Indicator -->
+            <div class="tactical-progress" id="progressFDI">
+              <div class="bar-segment active-aman"></div>
+              <div class="bar-segment"></div>
+              <div class="bar-segment"></div>
+              <div class="bar-segment"></div>
+              <div class="bar-segment"></div>
+            </div>
+          </div>
+
+          <!-- 6. Indeks Kerentanan Longsor (SVI) -->
+          <div class="telemetry-card">
+            <div class="telemetry-header">
+              <span class="mono-label">INDEKS LONGSOR (SVI)</span>
+              <span class="material-symbols-outlined card-icon text-indigo">shield</span>
+            </div>
+            <div class="telemetry-body">
+              <div class="telemetry-value-box">
+                <span class="telemetry-num" id="valSVI">0.18</span>
+                <span class="telemetry-unit">/ 1.0</span>
+              </div>
+              <div class="telemetry-sub" id="subSVI"><i class="fa-solid fa-shield text-emerald"></i> AMAN LONGSOR</div>
+            </div>
+            <div class="tactical-progress" id="progressSVI">
+              <div class="bar-segment active-aman"></div>
+              <div class="bar-segment"></div>
+              <div class="bar-segment"></div>
+              <div class="bar-segment"></div>
+              <div class="bar-segment"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-Node Consensus Visualizer Graph Card -->
+        <div class="flutter-card consensus-card">
+          <div class="card-header-bar">
+            <div class="card-header-title">
+              <i class="fa-solid fa-diagram-project text-sky"></i>
+              <span>Graf Konsensus Multi-Node (3 Node Sensor)</span>
+            </div>
+            <span class="mono-tag">RADIUS 100M</span>
+          </div>
+
+          <div class="consensus-canvas-wrapper">
+            <canvas id="consensusCanvas"></canvas>
+          </div>
+
+          <div class="consensus-badge-pill" id="consensusBadge">
+            <i class="fa-solid fa-check-double"></i> 3/3 Node Sepakat: Tidak Ada Anomali Geologis Maupun Panas
+          </div>
+        </div>
+
+        <!-- Real-time Telemetry Charts (Tilt, Soil, Temp, Humidity) -->
+        <div class="flutter-card chart-card-box">
+          <div class="card-header-bar">
+            <div class="card-header-title">
+              <i class="fa-solid fa-chart-line text-sky"></i>
+              <span>Grafik Riwayat Telemetri Sensor</span>
+            </div>
+            <div class="chart-tab-toggles">
+              <button class="chart-toggle-btn active" onclick="switchChartTab('tilt')">Kemiringan</button>
+              <button class="chart-toggle-btn" onclick="switchChartTab('soil')">Kelembapan Tanah</button>
+              <button class="chart-toggle-btn" onclick="switchChartTab('temp')">Suhu Udara</button>
+              <button class="chart-toggle-btn" onclick="switchChartTab('humidity')">Kelembapan Udara</button>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrapper">
+            <canvas id="mainTelemetryChart"></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================================================================
+           TAB 2: PETA SEKTOR SCREEN (SPATIAL GIS MAP)
+           ================================================================== -->
+      <section class="tab-screen" id="tabMap">
+        <div class="flutter-card map-card">
+          <div class="map-card-header">
+            <div class="map-title">
+              <i class="fa-solid fa-map-location-dot text-sky"></i>
+              <span>Peta Spasial Topografi Sektor 3</span>
+            </div>
+            <span class="mono-tag">COORD: -7.6271, 111.1923</span>
+          </div>
+
+          <div class="map-canvas-container">
+            <canvas id="mapCanvas"></canvas>
+
+            <!-- Layer Toggles Bar Overlay -->
+            <div class="map-layer-bar">
+              <button class="layer-pill active" id="toggleContour" onclick="toggleMapLayer('contour')">
+                <i class="fa-solid fa-layer-group"></i> Kontur 3D
+              </button>
+              <button class="layer-pill active" id="toggleHeatmap" onclick="toggleMapLayer('heatmap')">
+                <i class="fa-solid fa-droplet"></i> Heatmap
+              </button>
+              <button class="layer-pill active" id="toggleNodes" onclick="toggleMapLayer('nodes')">
+                <i class="fa-solid fa-tower-cell"></i> Sensor Node
+              </button>
+            </div>
+
+            <!-- Map Legend Box Overlay -->
+            <div class="map-legend-overlay">
+              <span class="legend-chip"><span class="dot aman"></span> Aman</span>
+              <span class="legend-chip"><span class="dot waspada"></span> Waspada</span>
+              <span class="legend-chip"><span class="dot siaga"></span> Siaga</span>
+              <span class="legend-chip"><span class="dot awas"></span> Awas Longsor</span>
+              <span class="legend-chip"><span class="dot karhutla"></span> Karhutla</span>
+            </div>
+
+            <!-- Interactive Node Click Popup Inspector -->
+            <div class="node-inspector-popup hidden" id="nodePopup">
+              <div class="popup-top">
+                <span class="popup-node-title" id="popupNodeName">Node 01 (Puncak Lereng)</span>
+                <span class="popup-status-dot" id="popupNodeDot"></span>
+              </div>
+              <div class="popup-grid">
+                <div class="popup-item">
+                  <span class="popup-label">Status Node</span>
+                  <span class="popup-val text-emerald" id="popupNodeHealth">SEHAT / AMAN</span>
+                </div>
+                <div class="popup-item">
+                  <span class="popup-label">Baterai (BMS)</span>
+                  <span class="popup-val" id="popupNodeBat">94% (3.95V)</span>
+                </div>
+                <div class="popup-item">
+                  <span class="popup-label">Kemiringan</span>
+                  <span class="popup-val" id="popupNodeTilt">1.2°</span>
+                </div>
+                <div class="popup-item">
+                  <span class="popup-label">Suhu Udara (DHT22)</span>
+                  <span class="popup-val" id="popupNodeTemp">26.5°C</span>
+                </div>
+                <div class="popup-item">
+                  <span class="popup-label">Sinyal LoRa</span>
+                  <span class="popup-val" id="popupNodeLora">-84 dBm (SNR 9.5)</span>
+                </div>
+                <div class="popup-item">
+                  <span class="popup-label">Mode Daya</span>
+                  <span class="popup-val" id="popupNodePower">SoPoWake Deep Sleep</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           TAB 3: LOGS & EVENTS STREAM SCREEN
+           ================================================================== -->
+      <section class="tab-screen" id="tabLogs">
+        <div class="flutter-card logs-card">
+          <div class="card-header-bar">
+            <div class="card-header-title">
+              <i class="fa-solid fa-list-check text-sky"></i>
+              <span>Riwayat Event &amp; Paket LoRa</span>
+            </div>
+            <span class="mono-tag">LIVE FEED</span>
+          </div>
+
+          <div class="logs-filter-bar">
+            <button class="log-filter-btn active" onclick="filterLogs('all')">Semua</button>
+            <button class="log-filter-btn" onclick="filterLogs('info')">INFO</button>
+            <button class="log-filter-btn" onclick="filterLogs('longsor')">LONGSOR</button>
+            <button class="log-filter-btn" onclick="filterLogs('karhutla')">KARHUTLA</button>
+          </div>
+
+          <div class="logs-stream-container" id="eventLogContainer">
+            <div class="log-row log-info">
+              <span class="log-time">[19:42:00]</span>
+              <span class="log-tag tag-info">INFO</span>
+              <span class="log-message">Heartbeat rutin Node 01, 02, 03 diterima via LoRa. MPU6050 & DHT22 Normal (SVI: 0.18, FDI: 0.12).</span>
+            </div>
+            <div class="log-row log-info">
+              <span class="log-time">[19:30:00]</span>
+              <span class="log-tag tag-info">INFO</span>
+              <span class="log-message">Multi-node consensus engine memverifikasi 3 node terhubung & sepakat tanpa anomali.</span>
+            </div>
+            <div class="log-row log-info">
+              <span class="log-time">[19:00:00]</span>
+              <span class="log-tag tag-info">INFO</span>
+              <span class="log-message">Sistem SoPoWake memasuki siklus deep sleep hemat daya (12uA).</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           TAB 4: ALERTS & EMERGENCY ACTIONS SCREEN
+           ================================================================== -->
+      <section class="tab-screen" id="tabAlerts">
+        <div class="flutter-card action-card">
+          <div class="card-header-bar">
+            <div class="card-header-title">
+              <i class="fa-solid fa-bullhorn text-sky"></i>
+              <span>Pusat Akses Pengujian &amp; Darurat</span>
+            </div>
+            <span class="mono-tag">SECURITY PIN GUARD</span>
+          </div>
+
+          <div class="action-buttons-list">
+            <button class="flutter-action-btn btn-siren" onclick="openPinModal('siren')">
+              <div class="btn-icon-box">
+                <i class="fa-solid fa-volume-high"></i>
+              </div>
+              <div class="btn-text-box">
+                <span class="btn-title">Uji Sirine Fisik 120dB</span>
+                <span class="btn-desc">Memicu relay sirine & LED strobe lokal di lokasi selama 5 detik.</span>
+              </div>
+              <i class="fa-solid fa-chevron-right btn-arrow"></i>
+            </button>
+
+            <button class="flutter-action-btn btn-bpbd" onclick="openPinModal('bpbd')">
+              <div class="btn-icon-box">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+              </div>
+              <div class="btn-text-box">
+                <span class="btn-title">Broadcast Push Notifikasi Mobile</span>
+                <span class="btn-desc">Mengirimkan notifikasi push darurat ke aplikasi mobile pengguna &amp; BPBD.</span>
+              </div>
+              <i class="fa-solid fa-chevron-right btn-arrow"></i>
+            </button>
+
+            <button class="flutter-action-btn btn-report" onclick="downloadReport()">
+              <div class="btn-icon-box">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div class="btn-text-box">
+                <span class="btn-title">Unduh Laporan Telemetri (PDF)</span>
+                <span class="btn-desc">Ekspor dokumen ringkasan data sensor 24 jam terakhir.</span>
+              </div>
+              <i class="fa-solid fa-chevron-right btn-arrow"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Flutter Bottom Navigation Bar (Fixed Bottom Navigation) -->
+    <nav class="flutter-bottom-nav">
+      <button class="nav-item active" onclick="switchTab('status')" id="navStatus">
+        <div class="nav-icon-wrapper">
+          <span class="material-symbols-outlined">dashboard</span>
+        </div>
+        <span class="nav-label">Status</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('map')" id="navMap">
+        <div class="nav-icon-wrapper">
+          <span class="material-symbols-outlined">map</span>
+        </div>
+        <span class="nav-label">Peta</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('logs')" id="navLogs">
+        <div class="nav-icon-wrapper">
+          <span class="material-symbols-outlined">list_alt</span>
+        </div>
+        <span class="nav-label">Logs</span>
+      </button>
+
+      <button class="nav-item" onclick="switchTab('alerts')" id="navAlerts">
+        <div class="nav-icon-wrapper">
+          <span class="material-symbols-outlined">notification_important</span>
+        </div>
+        <span class="nav-label">Alerts</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Security PIN Modal Backdrop -->
+  <div class="modal-backdrop" id="pinModalBackdrop">
+    <div class="modal-card">
+      <div class="modal-icon" id="modalIcon">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <h3 class="modal-title" id="modalTitle">Konfirmasi PIN Keamanan</h3>
+      <p class="modal-desc" id="modalDesc">Masukkan PIN 4-digit untuk memicu pengujian sirine darurat 120dB di lokasi lereng.</p>
+      
+      <div class="pin-input-group">
+        <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus onkeyup="movePinFocus(this, 'pin2')">
+        <input type="password" maxlength="1" class="pin-digit" id="pin2" onkeyup="movePinFocus(this, 'pin3')">
+        <input type="password" maxlength="1" class="pin-digit" id="pin3" onkeyup="movePinFocus(this, 'pin4')">
+        <input type="password" maxlength="1" class="pin-digit" id="pin4" onkeyup="verifyPinSubmit()">
+      </div>
+
+      <div class="demo-pin-note">Default Demo PIN: <strong class="text-sky">1234</strong></div>
+
+      <div class="modal-actions">
+        <button class="btn-modal btn-cancel" onclick="closePinModal()">Batal</button>
+        <button class="btn-modal btn-confirm" onclick="verifyPinSubmit()">Konfirmasi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emergency Siren Toast Alert -->
+  <div class="siren-toast" id="sirenToast">
+    <i class="fa-solid fa-volume-high fa-bounce toast-icon"></i>
+    <div class="toast-content">
+      <div class="toast-title" id="toastTitle">SIRINE AKTIF DI LOKASI!</div>
+      <div class="toast-desc" id="toastDesc">Relay 120dB aktif selama 5 detik (Pengujian Selesai).</div>
+    </div>
+  </div>
+
+  <!-- Application Engine Script -->
+  <script src="app.js"></script>
+</body>
+</html>

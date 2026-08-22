@@ -1,0 +1,47 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+
+# IDE & Editor
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+titen_app/.dart_tool/
+titen_app/.flutter-plugins
+titen_app/.flutter-plugins-dependencies
+titen_app/.pub-cache/
+titen_app/.pub/
+titen_app/build/
+titen_app/coverage/
+
+# Android/iOS builds
+android/app/debug
+android/app/profile
+android/app/release
+ios/Flutter/.last_build_id
+app.*.symbols
+app.*.map.json
+
+# Environment / Credentials
+.env
+.env.*
+!.env.example

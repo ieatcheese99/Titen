@@ -1,4 +1,4 @@
-package com.trilogy.titen.titen_app
+package com.trilogy.titen
 
 import io.flutter.embedding.android.FlutterActivity
 

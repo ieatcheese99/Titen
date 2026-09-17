@@ -84,120 +84,146 @@ class AnalyticsScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // 3. Main Chart Card (fl_chart)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: TitenColors.surfaceWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: TitenColors.outlineBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            // 3, 4, 5. Main Chart Card and Statistics / Assessment
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 850;
+
+                final chartCard = Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: TitenColors.surfaceWhite,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: TitenColors.outlineBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(selectedMetric.title, style: TitenTypography.titleLarge),
-                          Text('Tren Riwayat Telemetri (7 Hari Terakhir)', style: TitenTypography.bodySmall),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(selectedMetric.title, style: TitenTypography.titleLarge),
+                              Text('Tren Riwayat Telemetri (7 Hari Terakhir)', style: TitenTypography.bodySmall),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: TitenColors.baseBackground,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: TitenColors.outlineBorder),
+                            ),
+                            child: Text(
+                              '${stats.current} ${selectedMetric.unit}',
+                              style: TitenTypography.dataValue.copyWith(
+                                color: TitenColors.primaryAccent,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: TitenColors.baseBackground,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: TitenColors.outlineBorder),
-                        ),
-                        child: Text(
-                          '${stats.current} ${selectedMetric.unit}',
-                          style: TitenTypography.dataValue.copyWith(
-                            color: TitenColors.primaryAccent,
-                            fontSize: 16,
-                          ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: isWide ? 300 : 220,
+                        child: historyAsync.when(
+                          data: (history) {
+                            if (history.isEmpty) {
+                              return const Center(child: Text('Tidak ada data riwayat.'));
+                            }
+                            return _buildLineChart(history, selectedMetric);
+                          },
+                          loading: () => const Center(child: CircularProgressIndicator()),
+                          error: (_, __) => const Center(child: Text('Gagal memuat data grafik')),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 220,
-                    child: historyAsync.when(
-                      data: (history) {
-                        if (history.isEmpty) {
-                          return const Center(child: Text('Tidak ada data riwayat.'));
-                        }
-                        return _buildLineChart(history, selectedMetric);
-                      },
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => const Center(child: Text('Gagal memuat data grafik')),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                );
 
-            const SizedBox(height: 20),
-
-            // 4. Statistics Summary Bento Grid
-            Text('RINGKASAN STATISTIK (7 HARI):', style: TitenTypography.dataLabel),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(child: _statCard('TERENDAH', '${stats.min} ${selectedMetric.unit}', Icons.arrow_downward, TitenColors.tacticalCyan)),
-                const SizedBox(width: 10),
-                Expanded(child: _statCard('RATA-RATA', '${stats.avg} ${selectedMetric.unit}', Icons.functions, TitenColors.primaryAccent)),
-                const SizedBox(width: 10),
-                Expanded(child: _statCard('TERTINGGI', '${stats.max} ${selectedMetric.unit}', Icons.arrow_upward, TitenColors.statusSiaga)),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // 5. Risk Assessment Recommendation Box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: TitenColors.surfaceWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: TitenColors.outlineBorder),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: TitenColors.primaryAccent.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.shield_outlined, color: TitenColors.primaryAccent, size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                final statsGrid = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('RINGKASAN STATISTIK (7 HARI):', style: TitenTypography.dataLabel),
+                    const SizedBox(height: 10),
+                    Row(
                       children: [
-                        Text('Analisis Risiko Lereng & Iklim', style: TitenTypography.titleLarge.copyWith(fontSize: 14)),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Fluktuasi harian dalam ambang batas normal. Tidak ada pergeseran tanah signifikan atau lonjakan suhu ekstrem terdeteksi.',
-                          style: TitenTypography.bodySmall.copyWith(fontSize: 12),
-                        ),
+                        Expanded(child: _statCard('TERENDAH', '${stats.min} ${selectedMetric.unit}', Icons.arrow_downward, TitenColors.tacticalCyan)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _statCard('RATA-RATA', '${stats.avg} ${selectedMetric.unit}', Icons.functions, TitenColors.primaryAccent)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _statCard('TERTINGGI', '${stats.max} ${selectedMetric.unit}', Icons.arrow_upward, TitenColors.statusSiaga)),
                       ],
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 16),
+                    // Risk Assessment Recommendation Box
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: TitenColors.surfaceWhite,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: TitenColors.outlineBorder),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: TitenColors.primaryAccent.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.shield_outlined, color: TitenColors.primaryAccent, size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Analisis Risiko Lereng & Iklim', style: TitenTypography.titleLarge.copyWith(fontSize: 14)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Fluktuasi harian dalam ambang batas normal. Tidak ada pergeseran tanah signifikan atau lonjakan suhu ekstrem terdeteksi.',
+                                  style: TitenTypography.bodySmall.copyWith(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+
+                if (isWide) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 6, child: chartCard),
+                      const SizedBox(width: 16),
+                      Expanded(flex: 4, child: statsGrid),
+                    ],
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    chartCard,
+                    const SizedBox(height: 20),
+                    statsGrid,
+                  ],
+                );
+              },
             ),
 
             const SizedBox(height: 30),

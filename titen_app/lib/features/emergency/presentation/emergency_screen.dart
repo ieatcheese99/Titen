@@ -24,37 +24,78 @@ class EmergencyScreen extends ConsumerWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Current Threat / Active Alert Hero
-            if (activeAlert != null)
-              _buildActiveThreatHero(context, activeAlert)
-            else
-              _buildSafeHero(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 800;
 
-            const SizedBox(height: 20),
+            final heroWidget = activeAlert != null
+                ? _buildActiveThreatHero(context, activeAlert)
+                : _buildSafeHero();
 
-            // 2. Siren Test & Control Card (US-05 with PIN Modal)
-            _buildSirenControlCard(context, ref, isSirenActive, isSirenTesting, emergencyController),
+            final sirenCard = _buildSirenControlCard(
+              context,
+              ref,
+              isSirenActive,
+              isSirenTesting,
+              emergencyController,
+            );
 
-            const SizedBox(height: 20),
+            final consensusCard = _buildConsensusInfoCard();
+            final evacuationCard = _buildEvacuationProtocolCard();
+            final hotlinesCard = _buildHotlinesCard(context);
 
-            // 3. Multi-Node Consensus Details
-            _buildConsensusInfoCard(),
+            if (isWide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column: Alert Status & Siren Command
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        heroWidget,
+                        const SizedBox(height: 20),
+                        sirenCard,
+                        const SizedBox(height: 20),
+                        hotlinesCard,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  // Right Column: Multi-Node Consensus & Evacuation Protocols
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        consensusCard,
+                        const SizedBox(height: 20),
+                        evacuationCard,
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
 
-            const SizedBox(height: 20),
-
-            // 4. Evacuation Protocol Guide
-            _buildEvacuationProtocolCard(),
-
-            const SizedBox(height: 20),
-
-            // 5. Emergency Hotlines
-            _buildHotlinesCard(context),
-
-            const SizedBox(height: 30),
-          ],
+            // Mobile Single Column
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                heroWidget,
+                const SizedBox(height: 20),
+                sirenCard,
+                const SizedBox(height: 20),
+                consensusCard,
+                const SizedBox(height: 20),
+                evacuationCard,
+                const SizedBox(height: 20),
+                hotlinesCard,
+                const SizedBox(height: 30),
+              ],
+            );
+          },
         ),
       ),
     );

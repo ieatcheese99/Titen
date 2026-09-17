@@ -4,10 +4,15 @@ import '../data/models/zone_status.dart';
 import '../data/models/alert_model.dart';
 import '../data/repositories/node_repository.dart';
 import '../data/repositories/mock_node_repository.dart';
+import '../data/repositories/firebase_node_repository.dart';
 
-/// Repository Provider (Singleton)
+/// Mode Data Source: true = Firebase Realtime IoT, false = Offline Mock Simulator
+final isFirebaseModeProvider = StateProvider<bool>((ref) => true);
+
+/// Repository Provider (Singleton with dynamic switcher)
 final nodeRepositoryProvider = Provider<NodeRepository>((ref) {
-  final repo = MockNodeRepository();
+  final isFirebase = ref.watch(isFirebaseModeProvider);
+  final repo = isFirebase ? FirebaseNodeRepository() : MockNodeRepository();
   ref.onDispose(() {
     repo.dispose();
   });

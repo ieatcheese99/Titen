@@ -106,55 +106,73 @@ class SensorDetailScreen extends ConsumerWidget {
                 Text('TELEMETRI MULTI-SENSOR FISIK:', style: TitenTypography.dataLabel),
                 const SizedBox(height: 10),
 
-                // Row 1: Soil Moisture & Tilt Angle
-                Row(
-                  children: [
-                    Expanded(
-                      child: _teleCard(
-                        'Kemiringan Lereng (MPU6050)',
-                        '${tele?.tiltDeg ?? 0}°',
-                        'Batas Bahaya: > ${HazardConstants.landslideTiltThresholdDeg}°',
-                        Icons.screen_rotation_alt,
-                        (tele?.tiltDeg ?? 0) > HazardConstants.landslideTiltThresholdDeg,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _teleCard(
-                        'Kelembapan Tanah (Capacitive)',
-                        '${tele?.soilMoisturePct ?? 0}%',
-                        'Batas Bahaya: > ${HazardConstants.landslideSoilMoistureThreshold}%',
-                        Icons.water_drop,
-                        (tele?.soilMoisturePct ?? 0) > HazardConstants.landslideSoilMoistureThreshold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 800;
 
-                // Row 2: Air Temp & Air Humidity
-                Row(
-                  children: [
-                    Expanded(
-                      child: _teleCard(
-                        'Suhu Udara (DHT22)',
-                        '${tele?.airTempC ?? 0}°C',
-                        'Batas Bahaya: > ${HazardConstants.karhutlaTempThresholdC}°C',
-                        Icons.thermostat,
-                        (tele?.airTempC ?? 0) > HazardConstants.karhutlaTempThresholdC,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _teleCard(
-                        'Kelembapan Udara (DHT22)',
-                        '${tele?.airHumidityPct ?? 0}%',
-                        'Batas Bahaya: < ${HazardConstants.karhutlaHumidityThreshold}%',
-                        Icons.air,
-                        (tele?.airHumidityPct ?? 0) < HazardConstants.karhutlaHumidityThreshold,
-                      ),
-                    ),
-                  ],
+                    final card1 = _teleCard(
+                      'Kemiringan Lereng (MPU6050)',
+                      '${tele?.tiltDeg ?? 0}°',
+                      'Batas Bahaya: > ${HazardConstants.landslideTiltThresholdDeg}°',
+                      Icons.screen_rotation_alt,
+                      (tele?.tiltDeg ?? 0) > HazardConstants.landslideTiltThresholdDeg,
+                    );
+                    final card2 = _teleCard(
+                      'Kelembapan Tanah (Capacitive)',
+                      '${tele?.soilMoisturePct ?? 0}%',
+                      'Batas Bahaya: > ${HazardConstants.landslideSoilMoistureThreshold}%',
+                      Icons.water_drop,
+                      (tele?.soilMoisturePct ?? 0) > HazardConstants.landslideSoilMoistureThreshold,
+                    );
+                    final card3 = _teleCard(
+                      'Suhu Udara (DHT22)',
+                      '${tele?.airTempC ?? 0}°C',
+                      'Batas Bahaya: > ${HazardConstants.karhutlaTempThresholdC}°C',
+                      Icons.thermostat,
+                      (tele?.airTempC ?? 0) > HazardConstants.karhutlaTempThresholdC,
+                    );
+                    final card4 = _teleCard(
+                      'Kelembapan Udara (DHT22)',
+                      '${tele?.airHumidityPct ?? 0}%',
+                      'Batas Bahaya: < ${HazardConstants.karhutlaHumidityThreshold}%',
+                      Icons.air,
+                      (tele?.airHumidityPct ?? 0) < HazardConstants.karhutlaHumidityThreshold,
+                    );
+
+                    if (isWide) {
+                      return Row(
+                        children: [
+                          Expanded(child: card1),
+                          const SizedBox(width: 12),
+                          Expanded(child: card2),
+                          const SizedBox(width: 12),
+                          Expanded(child: card3),
+                          const SizedBox(width: 12),
+                          Expanded(child: card4),
+                        ],
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: card1),
+                            const SizedBox(width: 12),
+                            Expanded(child: card2),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: card3),
+                            const SizedBox(width: 12),
+                            Expanded(child: card4),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 20),

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "990164300071",
+    "project_id": "titen-2f970",
+    "storage_bucket": "titen-2f970.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990164300071:android:277b449ff217852648f902",
+        "android_client_info": {
+          "package_name": "com.trilogy.titen"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQ4g_fpRgymHOl7ae2tQ9eewp0Vrkz3ow"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

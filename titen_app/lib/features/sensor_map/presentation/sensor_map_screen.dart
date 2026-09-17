@@ -137,29 +137,41 @@ class _SensorMapScreenState extends ConsumerState<SensorMapScreen> {
             bottom: 20,
             left: 16,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: TitenColors.surfaceWhite.withOpacity(0.95),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: TitenColors.outlineBorder),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: TitenColors.surfaceWhite.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: TitenColors.outlineBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _legendItem('Aman', TitenColors.statusAman),
-                  _legendItem('Waspada', TitenColors.statusWaspada),
-                  _legendItem('Siaga', TitenColors.statusSiaga),
-                  _legendItem('Awas Longsor', TitenColors.statusAwasLongsor),
-                  _legendItem('Awas Karhutla', TitenColors.statusAwasKarhutla),
-                ],
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _legendItem('Aman', TitenColors.statusAman),
+                        const SizedBox(width: 14),
+                        _legendItem('Waspada', TitenColors.statusWaspada),
+                        const SizedBox(width: 14),
+                        _legendItem('Siaga', TitenColors.statusSiaga),
+                        const SizedBox(width: 14),
+                        _legendItem('Awas Longsor', TitenColors.statusAwasLongsor),
+                        const SizedBox(width: 14),
+                        _legendItem('Awas Karhutla', TitenColors.statusAwasKarhutla),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

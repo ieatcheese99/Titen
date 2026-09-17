@@ -1,46 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="TITEN - Sistem Peringatan Dini Tanah Longsor & Kebakaran Hutan Berbasis IoT dan AI (MAGE 12 Trilogy).">
+  <meta name="theme-color" content="#059669">
+
+  <!-- Open Graph / Web Portal Meta -->
+  <meta property="og:title" content="TITEN - IoT Disaster Early Warning System">
+  <meta property="og:description" content="Monitoring telemetri lereng curam & deteksi dini karhutla real-time berbasis LoRa MESH.">
+  <meta property="og:type" content="website">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="titen_app">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TITEN EWS">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>titen_app</title>
+  <title>TITEN - Sistem Peringatan Dini Bencana (IoT Web Portal)</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Inter / Manrope Fonts for Preloader -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #F8FAFC;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+    #titen-loader-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(145deg, #0F172A 0%, #064E3B 60%, #0F172A 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      color: #FFFFFF;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .radar-pulse-box {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .radar-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid rgba(16, 185, 129, 0.4);
+      animation: pulseRings 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    .radar-ring:nth-child(2) {
+      animation-delay: 0.6s;
+    }
+    .radar-core {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.6);
+    }
+    .radar-core svg {
+      width: 32px;
+      height: 32px;
+      fill: #FFFFFF;
+    }
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .brand-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10B981;
+      color: #6EE7B7;
+      border-radius: 6px;
+      letter-spacing: 1px;
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: #94A3B8;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+    .progress-bar-wrap {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 40%;
+      background: #10B981;
+      border-radius: 99px;
+      animation: indeterminateProgress 1.6s infinite ease-in-out;
+    }
+    .status-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #64748B;
+      margin-top: 12px;
+    }
+    @keyframes pulseRings {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(1.8);
+        opacity: 0;
+      }
+    }
+    @keyframes indeterminateProgress {
+      0% { left: -40%; width: 40%; }
+      50% { left: 40%; width: 60%; }
+      100% { left: 100%; width: 40%; }
+    }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <!-- Seamless Branded Web Preloader -->
+  <div id="titen-loader-container">
+    <div class="radar-pulse-box">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="radar-core">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+        </svg>
+      </div>
+    </div>
+    <div class="brand-title">
+      TITEN <span class="brand-tag">WEB & IOT</span>
+    </div>
+    <div class="brand-subtitle">Sistem Peringatan Dini Bencana • MAGE 12</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill"></div>
+    </div>
+    <div class="status-text">Memuat Engine & Telemetri Sensor...</div>
+  </div>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <script>
+    // Remove loader once Flutter has painted its first frame
+    window.addEventListener('flutter-first-frame', function () {
+      const loader = document.getElementById('titen-loader-container');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(function() {
+          loader.remove();
+        }, 500);
+      }
+    });
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../dashboard/application/dashboard_providers.dart';
+import '../../dashboard/data/models/sensor_node.dart';
 
 class SensorListScreen extends ConsumerStatefulWidget {
   const SensorListScreen({super.key});
@@ -93,119 +94,143 @@ class _SensorListScreenState extends ConsumerState<SensorListScreen> {
                 ),
               )
             else
-              ...filtered.map((node) {
-                final color = getStatusColor(node.lastStatusLevel, node.lastHazardType);
-                final tele = node.lastTelemetry;
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: InkWell(
-                    onTap: () => context.go('/sensors/${node.nodeId}'),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Top Row: Node Name + Status Badge
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: color.withOpacity(0.12),
-                                    child: Text(
-                                      '0${node.nodeId}',
-                                      style: TextStyle(
-                                        color: color,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    node.name,
-                                    style: TitenTypography.titleLarge.copyWith(fontSize: 15),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: color.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: color.withOpacity(0.4)),
-                                ),
-                                child: Text(
-                                  node.statusText,
-                                  style: TextStyle(
-                                    color: color,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 14),
-
-                          // Middle: Live Metrics Pills
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _metricPill('Kemiringan', '${tele?.tiltDeg ?? 0}°', tele?.isLandslideHazard ?? false),
-                              _metricPill('Kelembapan', '${tele?.soilMoisturePct ?? 0}%', tele?.isLandslideHazard ?? false),
-                              _metricPill('Suhu', '${tele?.airTempC ?? 0}°C', tele?.isKarhutlaHazard ?? false),
-                              _metricPill('Udara', '${tele?.airHumidityPct ?? 0}%', tele?.isKarhutlaHazard ?? false),
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-                          const Divider(),
-                          const SizedBox(height: 8),
-
-                          // Bottom Row: Battery, Signal RSSI, Last Seen
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.battery_charging_full, size: 14, color: TitenColors.textMuted),
-                                  const SizedBox(width: 4),
-                                  Text('${node.batteryPct}% (BMS)', style: TitenTypography.bodySmall),
-                                  const SizedBox(width: 12),
-                                  const Icon(Icons.cell_tower, size: 14, color: TitenColors.textMuted),
-                                  const SizedBox(width: 4),
-                                  Text('${node.loraRssi} dBm', style: TitenTypography.bodySmall),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Detail',
-                                    style: TitenTypography.bodySmall.copyWith(
-                                      color: TitenColors.primaryAccent,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const Icon(Icons.chevron_right, size: 16, color: TitenColors.primaryAccent),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = constraints.maxWidth > 900 ? 3 : (constraints.maxWidth > 580 ? 2 : 1);
+                  if (crossAxisCount == 1) {
+                    return Column(
+                      children: filtered.map((node) => _buildNodeCard(context, node)).toList(),
+                    );
+                  }
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      mainAxisExtent: 180,
                     ),
-                  ),
-                );
-              }),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) => _buildNodeCard(context, filtered[i]),
+                  );
+                },
+              ),
 
             const SizedBox(height: 30),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeCard(BuildContext context, SensorNode node) {
+    final color = getStatusColor(node.lastStatusLevel, node.lastHazardType);
+    final tele = node.lastTelemetry;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => context.go('/sensors/${node.nodeId}'),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Top Row: Node Name + Status Badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: color.withValues(alpha: 0.12),
+                        child: Text(
+                          '0${node.nodeId}',
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        node.name,
+                        style: TitenTypography.titleLarge.copyWith(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: color.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      node.statusText,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // Middle: Live Metrics Pills
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _metricPill('Kemiringan', '${tele?.tiltDeg ?? 0}°', tele?.isLandslideHazard ?? false),
+                  _metricPill('Kelembapan', '${tele?.soilMoisturePct ?? 0}%', tele?.isLandslideHazard ?? false),
+                  _metricPill('Suhu', '${tele?.airTempC ?? 0}°C', tele?.isKarhutlaHazard ?? false),
+                  _metricPill('Udara', '${tele?.airHumidityPct ?? 0}%', tele?.isKarhutlaHazard ?? false),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+              const Divider(height: 1),
+              const SizedBox(height: 6),
+
+              // Bottom Row: Battery, Signal RSSI, Last Seen
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.battery_charging_full, size: 14, color: TitenColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text('${node.batteryPct}% (BMS)', style: TitenTypography.bodySmall),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.cell_tower, size: 14, color: TitenColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text('${node.loraRssi} dBm', style: TitenTypography.bodySmall),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'Detail',
+                        style: TitenTypography.bodySmall.copyWith(
+                          color: TitenColors.primaryAccent,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, size: 16, color: TitenColors.primaryAccent),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -226,7 +251,7 @@ class _SensorListScreenState extends ConsumerState<SensorListScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isAlert ? TitenColors.statusAwasLongsor.withOpacity(0.1) : TitenColors.baseBackground,
+        color: isAlert ? TitenColors.statusAwasLongsor.withValues(alpha: 0.1) : TitenColors.baseBackground,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isAlert ? TitenColors.statusAwasLongsor : TitenColors.outlineBorder,

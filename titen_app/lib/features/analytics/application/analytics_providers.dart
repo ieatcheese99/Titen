@@ -2,12 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../dashboard/data/models/telemetry_data.dart';
 import '../../dashboard/application/dashboard_providers.dart';
 
-enum AnalyticsMetric {
-  soilMoisture,
-  airTemp,
-  tiltAngle,
-  airHumidity,
-}
+enum AnalyticsMetric { soilMoisture, airTemp, tiltAngle, airHumidity }
 
 extension AnalyticsMetricExtension on AnalyticsMetric {
   String get title {
@@ -38,14 +33,18 @@ extension AnalyticsMetricExtension on AnalyticsMetric {
 }
 
 final selectedNodeIdForAnalyticsProvider = StateProvider<int>((ref) => 1);
-final selectedMetricProvider = StateProvider<AnalyticsMetric>((ref) => AnalyticsMetric.soilMoisture);
+final selectedMetricProvider = StateProvider<AnalyticsMetric>(
+  (ref) => AnalyticsMetric.soilMoisture,
+);
 final selectedTimeframeDaysProvider = StateProvider<int>((ref) => 7);
 
 final telemetryHistoryProvider = StreamProvider<List<TelemetryData>>((ref) {
-  final repo = ref.watch(nodeRepositoryProvider);
   final nodeId = ref.watch(selectedNodeIdForAnalyticsProvider);
   final days = ref.watch(selectedTimeframeDaysProvider);
-  return repo.watchTelemetryHistory(nodeId, days: days);
+  return watchReadyRepositoryStream(
+    ref,
+    (repo) => repo.watchTelemetryHistory(nodeId, days: days),
+  );
 });
 
 class MetricStats {
@@ -61,7 +60,8 @@ class MetricStats {
     required this.avg,
   });
 
-  factory MetricStats.empty() => MetricStats(current: 0, min: 0, max: 0, avg: 0);
+  factory MetricStats.empty() =>
+      MetricStats(current: 0, min: 0, max: 0, avg: 0);
 }
 
 final metricStatsProvider = Provider<MetricStats>((ref) {
@@ -72,18 +72,23 @@ final metricStatsProvider = Provider<MetricStats>((ref) {
     data: (list) {
       if (list.isEmpty) return MetricStats.empty();
 
-      final values = list.map((t) {
-        switch (metric) {
-          case AnalyticsMetric.soilMoisture:
-            return t.soilMoisturePct;
-          case AnalyticsMetric.airTemp:
-            return t.airTempC;
-          case AnalyticsMetric.tiltAngle:
-            return t.tiltDeg;
-          case AnalyticsMetric.airHumidity:
-            return t.airHumidityPct;
-        }
-      }).toList();
+      final values = list
+          .map((t) {
+            switch (metric) {
+              case AnalyticsMetric.soilMoisture:
+                return t.soilMoisturePct;
+              case AnalyticsMetric.airTemp:
+                return t.airTempC;
+              case AnalyticsMetric.tiltAngle:
+                return t.tiltDeg;
+              case AnalyticsMetric.airHumidity:
+                return t.airHumidityPct;
+            }
+          })
+          .whereType<double>()
+          .toList();
+
+      if (values.isEmpty) return MetricStats.empty();
 
       double minVal = values.first;
       double maxVal = values.first;

@@ -28,7 +28,7 @@
 // 2. Sensor Lingkungan & Bencana
 #define PIN_SOIL_ADC         1           // ADC1_CH0 untuk Capacitive Soil Moisture V2
 #define PIN_DHT22_DATA       2           // Single-bus data DHT22 (Suhu & Kelembapan Udara)
-#define PIN_FLAME_DO         3           // KY-026 Flame Sensor (Digital Active LOW)
+#define PIN_FLAME_DO         3           // KY-026 Flame Sensor (Digital Active LOW, atau GPIO 7 sesuai PINOUT V2)
 #define PIN_BATTERY_ADC      5           // ADC1_CH4 via Voltage Divider 5:1 (Tegangan Baterai)
 #define PIN_RELAY_ALARM      6           // Relay 3.3V memicu Sirine 120dB & LED Strobe 3V
 
@@ -48,7 +48,9 @@
 #define LORA_BANDWIDTH       125E3
 
 // Manajemen Daya Deep Sleep SoPoWake
-#define SLEEP_DURATION_SEC   21600       // 6 Jam rutin lapor status "AMAN" (6 * 3600 dtk)
+// Ubah DEMO_MODE ke true jika ingin transmisi berulang tiap 5 detik saat uji coba dengan gateway.
+#define DEMO_MODE            false       // true = uji coba/demo (5 detik), false = produksi hemat daya (6 jam)
+#define SLEEP_DURATION_SEC   (DEMO_MODE ? 5 : 21600)
 #define uS_TO_S_FACTOR       1000000ULL  // Konversi mikrodetik ke detik
 
 #define DHT_TYPE             DHT22

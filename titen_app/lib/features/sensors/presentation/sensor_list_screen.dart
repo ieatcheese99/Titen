@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/widgets/filter_search.dart';
+import '../../../core/widgets/node_row.dart';
+import '../../../core/widgets/cache_status_footer.dart';
 import '../../dashboard/application/dashboard_providers.dart';
 import '../../dashboard/data/models/sensor_node.dart';
 
+/// Daftar Perangkat Screen conforming to 03_APP_FLUTTER_SPEC.md §4.3
 class SensorListScreen extends ConsumerStatefulWidget {
   const SensorListScreen({super.key});
 
@@ -15,276 +19,207 @@ class SensorListScreen extends ConsumerStatefulWidget {
 
 class _SensorListScreenState extends ConsumerState<SensorListScreen> {
   String _searchQuery = '';
+  FreshnessStatus? _selectedFreshness;
+  int? _selectedHazardLevel;
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.titenTokens;
     final nodesAsync = ref.watch(allNodesProvider);
     final nodes = nodesAsync.value ?? [];
 
     final filtered = nodes.where((n) {
-      if (_searchQuery.isEmpty) return true;
-      return n.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          n.nodeId.toString().contains(_searchQuery);
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final matchesName = n.name.toLowerCase().contains(q);
+        final matchesId = n.nodeId.toString().contains(q) || n.nodeKey.toLowerCase().contains(q);
+        if (!matchesName && !matchesId) return false;
+      }
+
+      if (_selectedFreshness != null && n.getFreshness() != _selectedFreshness) {
+        return false;
+      }
+
+      if (_selectedHazardLevel != null && n.lastStatusLevel != _selectedHazardLevel) {
+        return false;
+      }
+
+      return true;
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Daftar Node Sensor IoT', style: TitenTypography.titleLarge),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Search Bar
-            TextField(
-              onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: InputDecoration(
-                hintText: 'Cari sensor berdasarkan nama atau ID...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () => setState(() => _searchQuery = ''),
-                      )
-                    : null,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // 2. Hardware Fleet Stats Banner
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: TitenColors.surfaceWhite,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: TitenColors.outlineBorder),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _fleetStat('Total Node', '${nodes.length}', Icons.sensors),
-                  const _VerticalDivider(),
-                  _fleetStat('Online', '${nodes.where((n) => n.isOnline).length}', Icons.check_circle_outline, TitenColors.statusAman),
-                  const _VerticalDivider(),
-                  _fleetStat('LoRa Band', '915 MHz', Icons.radio),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 3. Node List Section
-            Text('SELURUH TITIK SENSOR LERENG & HUTAN:', style: TitenTypography.dataLabel),
-            const SizedBox(height: 10),
-
-            if (filtered.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Center(
-                  child: Column(
-                    children: [
-                      const Icon(Icons.search_off, size: 40, color: TitenColors.textMuted),
-                      const SizedBox(height: 8),
-                      Text('Tidak ada sensor yang cocok dengan pencarian.', style: TitenTypography.bodyMedium),
-                    ],
-                  ),
-                ),
-              )
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final crossAxisCount = constraints.maxWidth > 900 ? 3 : (constraints.maxWidth > 580 ? 2 : 1);
-                  if (crossAxisCount == 1) {
-                    return Column(
-                      children: filtered.map((node) => _buildNodeCard(context, node)).toList(),
-                    );
-                  }
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      mainAxisExtent: 180,
-                    ),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, i) => _buildNodeCard(context, filtered[i]),
-                  );
-                },
-              ),
-
-            const SizedBox(height: 30),
-          ],
+        title: Text(
+          'Daftar Node & Gateway IoT',
+          style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 18),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'Buka Peta Geografis',
+            onPressed: () => context.go('/devices/map'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.analytics_outlined),
+            tooltip: 'Analitik Tren',
+            onPressed: () => context.go('/devices/analytics'),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildNodeCard(BuildContext context, SensorNode node) {
-    final color = getStatusColor(node.lastStatusLevel, node.lastHazardType);
-    final tele = node.lastTelemetry;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => context.go('/sensors/${node.nodeId}'),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(allNodesProvider);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Top Row: Node Name + Status Badge
+              // 1. Search Bar (M08 FilterSearch)
+              FilterSearch(
+                query: _searchQuery,
+                onChanged: (val) => setState(() => _searchQuery = val),
+                onClear: () => setState(() => _searchQuery = ''),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 2. Filter Chips: All, Fresh, Anomaly, Stale
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    FilterChip(
+                      selected: _selectedFreshness == null && _selectedHazardLevel == null,
+                      label: const Text('Semua'),
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedFreshness = null;
+                          _selectedHazardLevel = null;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      selected: _selectedFreshness == FreshnessStatus.fresh,
+                      label: const Text('Data Fresh'),
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedFreshness = selected ? FreshnessStatus.fresh : null;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      selected: _selectedHazardLevel != null,
+                      label: const Text('Ada Anomali'),
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedHazardLevel = selected ? 1 : null;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      selected: _selectedFreshness == FreshnessStatus.stale,
+                      label: const Text('Stale / Terlambat'),
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedFreshness = selected ? FreshnessStatus.stale : null;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 3. Node List Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: color.withValues(alpha: 0.12),
-                        child: Text(
-                          '0${node.nodeId}',
-                          style: TextStyle(
-                            color: color,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        node.name,
-                        style: TitenTypography.titleLarge.copyWith(fontSize: 15),
-                      ),
-                    ],
+                  Text(
+                    'NODE TERVERIFIKASI (${filtered.length} DITEMUKAN):',
+                    style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      fontSize: 12,
+                    ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: color.withValues(alpha: 0.4)),
-                    ),
-                    child: Text(
-                      node.statusText,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  Text(
+                    'Total Registry: ${nodes.length}',
+                    style: TitenTypography.technical(color: tokens.textMetadata).copyWith(fontSize: 11),
                   ),
                 ],
               ),
-
               const SizedBox(height: 10),
 
-              // Middle: Live Metrics Pills
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _metricPill('Kemiringan', '${tele?.tiltDeg ?? 0}°', tele?.isLandslideHazard ?? false),
-                  _metricPill('Kelembapan', '${tele?.soilMoisturePct ?? 0}%', tele?.isLandslideHazard ?? false),
-                  _metricPill('Suhu', '${tele?.airTempC ?? 0}°C', tele?.isKarhutlaHazard ?? false),
-                  _metricPill('Udara', '${tele?.airHumidityPct ?? 0}%', tele?.isKarhutlaHazard ?? false),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-              const Divider(height: 1),
-              const SizedBox(height: 6),
-
-              // Bottom Row: Battery, Signal RSSI, Last Seen
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.battery_charging_full, size: 14, color: TitenColors.textMuted),
-                      const SizedBox(width: 4),
-                      Text('${node.batteryPct}% (BMS)', style: TitenTypography.bodySmall),
-                      const SizedBox(width: 12),
-                      const Icon(Icons.cell_tower, size: 14, color: TitenColors.textMuted),
-                      const SizedBox(width: 4),
-                      Text('${node.loraRssi} dBm', style: TitenTypography.bodySmall),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Detail',
-                        style: TitenTypography.bodySmall.copyWith(
-                          color: TitenColors.primaryAccent,
-                          fontWeight: FontWeight.w600,
+              if (nodesAsync.isLoading)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
+                        const SizedBox(height: 12),
+                        Text('Memuat node dari database...', style: TitenTypography.metadata(color: tokens.textMetadata)),
+                      ],
+                    ),
+                  ),
+                )
+              else if (filtered.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: tokens.surfacePanel,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: tokens.borderSubtle),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.search_off_outlined, size: 40, color: tokens.textMetadata),
+                      const SizedBox(height: 10),
+                      Text(
+                        _searchQuery.isNotEmpty
+                            ? 'Tidak ada node yang cocok dengan pencarian.'
+                            : 'Belum ada data node sensor yang diterima.',
+                        style: TitenTypography.body(color: tokens.textSecondary),
+                        textAlign: TextAlign.center,
                       ),
-                      const Icon(Icons.chevron_right, size: 16, color: TitenColors.primaryAccent),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Pastikan node fisik aktif dan memancarkan paket telemetri LoRa.',
+                        style: TitenTypography.metadata(color: tokens.textMetadata),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
-                ],
-              ),
+                )
+              else
+                ...filtered.map(
+                  (node) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: NodeRow(
+                      node: node,
+                      onTap: () => context.go('/devices/nodes/${node.nodeId}'),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+              const CacheStatusFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _fleetStat(String label, String value, IconData icon, [Color? color]) {
-    return Column(
-      children: [
-        Icon(icon, size: 18, color: color ?? TitenColors.textMuted),
-        const SizedBox(height: 4),
-        Text(value, style: TitenTypography.dataValue.copyWith(fontSize: 16)),
-        Text(label, style: TitenTypography.bodySmall.copyWith(fontSize: 11)),
-      ],
-    );
-  }
-
-  Widget _metricPill(String label, String val, bool isAlert) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: isAlert ? TitenColors.statusAwasLongsor.withValues(alpha: 0.1) : TitenColors.baseBackground,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: isAlert ? TitenColors.statusAwasLongsor : TitenColors.outlineBorder,
-        ),
-      ),
-      child: Column(
-        children: [
-          Text(
-            val,
-            style: TitenTypography.dataValue.copyWith(
-              fontSize: 12,
-              color: isAlert ? TitenColors.statusAwasLongsor : TitenColors.textMain,
-            ),
-          ),
-          Text(
-            label,
-            style: TitenTypography.bodySmall.copyWith(fontSize: 9),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 30,
-      color: TitenColors.outlineBorder,
     );
   }
 }

@@ -9,6 +9,7 @@ import '../../../core/constants/app_typography.dart';
 import '../../dashboard/application/dashboard_providers.dart';
 import '../../dashboard/data/models/sensor_node.dart';
 
+/// Sensor Map Screen conforming to 03_APP_FLUTTER_SPEC.md §4.1 & §4.3
 class SensorMapScreen extends ConsumerStatefulWidget {
   const SensorMapScreen({super.key});
 
@@ -21,223 +22,294 @@ class _SensorMapScreenState extends ConsumerState<SensorMapScreen> {
   String _selectedFilter = 'all'; // 'all', 'landslide', 'karhutla', 'danger'
 
   @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final tokens = context.titenTokens;
     final nodesAsync = ref.watch(allNodesProvider);
     final allNodes = nodesAsync.value ?? [];
 
-    final filteredNodes = allNodes.where((n) {
-      if (_selectedFilter == 'landslide') return n.nodeType == 'landslide' || n.nodeType == 'combo';
-      if (_selectedFilter == 'karhutla') return n.nodeType == 'karhutla' || n.nodeType == 'combo';
-      if (_selectedFilter == 'danger') return n.lastStatusLevel > 0;
+    // Filter nodes with valid registry coordinates per 03_APP_FLUTTER_SPEC.md §4.1
+    final nodesWithLocation = allNodes
+        .where((n) => n.hasValidCoordinates)
+        .toList();
+
+    final filteredNodes = nodesWithLocation.where((n) {
+      if (_selectedFilter == 'landslide') {
+        return n.nodeType == 'landslide' || n.nodeType == 'combo';
+      }
+      if (_selectedFilter == 'karhutla') {
+        return n.nodeType == 'karhutla' || n.nodeType == 'combo';
+      }
+      if (_selectedFilter == 'danger') return (n.lastStatusLevel ?? 0) > 0;
       return true;
     }).toList();
 
+    final unlocatedNodes = allNodes
+        .where((n) => !n.hasValidCoordinates)
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Peta Sebaran Sensor IoT', style: TitenTypography.titleLarge),
+        title: Text(
+          'Peta Sebaran Sensor IoT',
+          style: TitenTypography.sectionTitle(
+            color: tokens.textPrimary,
+          ).copyWith(fontSize: 18),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location_rounded),
             tooltip: 'Fokus ke Area Sensor',
-            onPressed: () {
-              _mapController.move(const LatLng(-6.9150, 107.6100), 14.2);
-            },
+            onPressed: nodesWithLocation.isEmpty
+                ? null
+                : () {
+                    _mapController.fitCamera(
+                      CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints(
+                          nodesWithLocation
+                              .map(
+                                (node) =>
+                                    LatLng(node.latitude!, node.longitude!),
+                              )
+                              .toList(),
+                        ),
+                        padding: const EdgeInsets.all(64),
+                        maxZoom: 16,
+                      ),
+                    );
+                  },
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          // 1. Fullscreen Map
-          FlutterMap(
-            mapController: _mapController,
-            options: const MapOptions(
-              initialCenter: LatLng(-6.9150, 107.6100),
-              initialZoom: 14.0,
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.trilogy.titen',
-                tileProvider: CancellableNetworkTileProvider(),
+      body: nodesAsync.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : nodesWithLocation.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.location_off_outlined,
+                      size: 40,
+                      color: tokens.textMetadata,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Lokasi node belum disetel',
+                      style: TitenTypography.sectionTitle(
+                        color: tokens.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      nodesAsync.hasError
+                          ? 'Data lokasi belum dapat dimuat. Periksa koneksi data live.'
+                          : 'Tambahkan koordinat lokasi pemasangan agar node dapat ditampilkan di peta.',
+                      style: TitenTypography.body(color: tokens.textMetadata),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              MarkerLayer(
-                markers: filteredNodes.map((node) {
-                  final color = getStatusColor(node.lastStatusLevel, node.lastHazardType);
-                  return Marker(
-                    point: LatLng(node.latitude, node.longitude),
-                    width: 50,
-                    height: 50,
-                    child: GestureDetector(
-                      onTap: () => _showNodeDetails(context, node),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.25),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withOpacity(0.5),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${node.nodeId}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+            )
+          : Stack(
+              children: [
+                // 1. Fullscreen Map
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCameraFit: CameraFit.bounds(
+                      bounds: LatLngBounds.fromPoints(
+                        nodesWithLocation
+                            .map(
+                              (node) => LatLng(node.latitude!, node.longitude!),
+                            )
+                            .toList(),
+                      ),
+                      padding: const EdgeInsets.all(64),
+                      maxZoom: 16,
+                    ),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.trilogy.titen',
+                      tileProvider: CancellableNetworkTileProvider(),
+                    ),
+                    MarkerLayer(
+                      markers: filteredNodes.map((node) {
+                        final color = getStatusColor(
+                          node.lastStatusLevel,
+                          node.lastHazardType,
+                        );
+                        return Marker(
+                          point: LatLng(node.latitude!, node.longitude!),
+                          width: 50,
+                          height: 50,
+                          child: GestureDetector(
+                            onTap: () => _showNodeDetails(context, node),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.25),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: color.withValues(alpha: 0.5),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '${node.nodeId}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+
+                // 2. Unlocated Nodes Warning Banner (if any)
+                if (unlocatedNodes.isNotEmpty)
+                  Positioned(
+                    bottom: 80,
+                    left: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tokens.surfacePanel,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: tokens.borderSubtle),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: tokens.textMetadata,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${unlocatedNodes.length} node belum memiliki koordinat GPS di registry.',
+                              style: TitenTypography.metadata(
+                                color: tokens.textSecondary,
+                              ).copyWith(fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-
-          // 2. Top Filter Chips
-          Positioned(
-            top: 12,
-            left: 16,
-            right: 16,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _filterChip('Semua (${allNodes.length})', 'all'),
-                  const SizedBox(width: 8),
-                  _filterChip('Zona Longsor', 'landslide'),
-                  const SizedBox(width: 8),
-                  _filterChip('Zona Karhutla', 'karhutla'),
-                  const SizedBox(width: 8),
-                  _filterChip('Anomali / Awas', 'danger'),
-                ],
-              ),
-            ),
-          ),
-
-          // 3. Bottom Floating Legend Card
-          Positioned(
-            bottom: 20,
-            left: 16,
-            right: 16,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: TitenColors.surfaceWhite.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: TitenColors.outlineBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
+
+                // 3. Floating Filter Controls (Top)
+                Positioned(
+                  top: 14,
+                  left: 14,
+                  right: 14,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _legendItem('Aman', TitenColors.statusAman),
-                        const SizedBox(width: 14),
-                        _legendItem('Waspada', TitenColors.statusWaspada),
-                        const SizedBox(width: 14),
-                        _legendItem('Siaga', TitenColors.statusSiaga),
-                        const SizedBox(width: 14),
-                        _legendItem('Awas Longsor', TitenColors.statusAwasLongsor),
-                        const SizedBox(width: 14),
-                        _legendItem('Awas Karhutla', TitenColors.statusAwasKarhutla),
+                        _filterButton(
+                          'all',
+                          'Semua (${nodesWithLocation.length})',
+                        ),
+                        const SizedBox(width: 8),
+                        _filterButton('landslide', 'Lereng / Longsor'),
+                        const SizedBox(width: 8),
+                        _filterButton('karhutla', 'Sektor Hutan'),
+                        const SizedBox(width: 8),
+                        _filterButton('danger', 'Ada Anomali'),
                       ],
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _filterChip(String label, String value) {
-    final isSelected = _selectedFilter == value;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: TitenColors.primaryAccent,
-      backgroundColor: TitenColors.surfaceWhite,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : TitenColors.textMain,
-        fontWeight: FontWeight.w600,
-        fontSize: 12,
-      ),
-      side: BorderSide(
-        color: isSelected ? TitenColors.primaryAccent : TitenColors.outlineBorder,
-      ),
-      onSelected: (selected) {
-        if (selected) {
-          setState(() {
-            _selectedFilter = value;
-          });
-        }
-      },
-    );
-  }
+  Widget _filterButton(String filterKey, String label) {
+    final tokens = context.titenTokens;
+    final isSelected = _selectedFilter == filterKey;
 
-  Widget _legendItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
+    return InkWell(
+      onTap: () => setState(() => _selectedFilter = filterKey),
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? tokens.actionPrimaryBg : tokens.surfacePanel,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? tokens.actionPrimaryBg : tokens.borderControl,
           ),
         ),
-        const SizedBox(width: 4),
-        Text(
+        child: Text(
           label,
-          style: TitenTypography.bodySmall.copyWith(
-            fontSize: 10,
+          style: TextStyle(
+            fontSize: 12,
             fontWeight: FontWeight.w600,
+            color: isSelected ? tokens.actionPrimaryFg : tokens.textPrimary,
           ),
         ),
-      ],
+      ),
     );
   }
 
   void _showNodeDetails(BuildContext context, SensorNode node) {
+    final tokens = context.titenTokens;
     final color = getStatusColor(node.lastStatusLevel, node.lastHazardType);
     final tele = node.lastTelemetry;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: TitenColors.surfaceWhite,
+      backgroundColor: tokens.surfaceRaised,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
       builder: (ctx) {
         return Padding(
@@ -254,21 +326,27 @@ class _SensorMapScreenState extends ConsumerState<SensorMapScreen> {
                     children: [
                       Text(node.name, style: TitenTypography.titleLarge),
                       Text(
-                        'Koordinat: ${node.latitude.toStringAsFixed(4)}, ${node.longitude.toStringAsFixed(4)}',
+                        'Koordinat: ${node.latitude?.toStringAsFixed(4) ?? "—"}, ${node.longitude?.toStringAsFixed(4) ?? "—"}',
                         style: TitenTypography.dataLabel,
                       ),
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      color: color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: color),
                     ),
                     child: Text(
                       node.statusText,
-                      style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -277,10 +355,28 @@ class _SensorMapScreenState extends ConsumerState<SensorMapScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _teleBox('Kemiringan', '${tele?.tiltDeg ?? 0}°', Icons.screen_rotation_alt),
-                  _teleBox('Kelembapan', '${tele?.soilMoisturePct ?? 0}%', Icons.water_drop),
-                  _teleBox('Suhu', '${tele?.airTempC ?? 0}°C', Icons.thermostat),
-                  _teleBox('Baterai', '${node.batteryPct}%', Icons.battery_charging_full),
+                  _teleBox(
+                    'Kemiringan',
+                    tele?.tiltDeg != null ? '${tele!.tiltDeg}°' : '—',
+                    Icons.screen_rotation_alt,
+                  ),
+                  _teleBox(
+                    'Kelembapan',
+                    tele?.soilMoisturePct != null
+                        ? '${tele!.soilMoisturePct}%'
+                        : '—',
+                    Icons.water_drop,
+                  ),
+                  _teleBox(
+                    'Suhu',
+                    tele?.airTempC != null ? '${tele!.airTempC}°C' : '—',
+                    Icons.thermostat,
+                  ),
+                  _teleBox(
+                    'Baterai',
+                    node.batteryPct != null ? '${node.batteryPct}%' : '—',
+                    Icons.battery_charging_full,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -289,7 +385,7 @@ class _SensorMapScreenState extends ConsumerState<SensorMapScreen> {
                 child: FilledButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    context.go('/sensors/${node.nodeId}');
+                    context.go('/devices/nodes/${node.nodeId}');
                   },
                   child: const Text('Buka Detail Node Lengkap'),
                 ),
@@ -302,12 +398,21 @@ class _SensorMapScreenState extends ConsumerState<SensorMapScreen> {
   }
 
   Widget _teleBox(String label, String value, IconData icon) {
+    final tokens = context.titenTokens;
     return Column(
       children: [
-        Icon(icon, size: 20, color: TitenColors.primaryAccent),
+        Icon(icon, size: 20, color: tokens.textSecondary),
         const SizedBox(height: 4),
-        Text(value, style: TitenTypography.dataValue.copyWith(fontSize: 16)),
-        Text(label, style: TitenTypography.bodySmall.copyWith(fontSize: 11)),
+        Text(
+          value,
+          style: TitenTypography.valueCompact().copyWith(fontSize: 16),
+        ),
+        Text(
+          label,
+          style: TitenTypography.metadata(
+            color: tokens.textMetadata,
+          ).copyWith(fontSize: 11),
+        ),
       ],
     );
   }

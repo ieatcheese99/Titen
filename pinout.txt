@@ -1,0 +1,127 @@
+========================================
+   PANDUAN WIRING & PINOUT TITEN (HP)
+========================================
+Format simpel per-komponen untuk perakitan.
+Gunakan multimeter untuk cek tegangan sebelum daya dinyalakan.
+
+========================================
+1. NODE SENSOR (ESP32-S3 N16R8)
+========================================
+
+--- MPU-6050 (Kemiringan & Getaran) ---
+VCC -> 3V3 ESP32-S3
+GND -> GND ESP32-S3
+SCL -> GPIO 9 ESP32-S3
+SDA -> GPIO 8 ESP32-S3
+AD0 -> GND ESP32-S3 (Alamat terkunci 0x68)
+INT -> GPIO 4 ESP32-S3 (Wakeup deep sleep)
+XDA -> KOSONG (NC)
+XCL -> KOSONG (NC)
+
+--- SOIL MOISTURE HW-390 (Tanah) ---
+VCC  -> 3V3 ESP32-S3
+GND  -> GND ESP32-S3
+AOUT -> GPIO 1 ESP32-S3 (ADC1_CH0)
+
+--- DHT22 3-PIN (Suhu & Udara) ---
++ (VCC) -> 3V3 ESP32-S3
+out     -> GPIO 2 ESP32-S3
+- (GND) -> GND ESP32-S3
+
+--- FLAME SENSOR HW-072 (Api) ---
+VCC -> 3V3 ESP32-S3
+GND -> GND ESP32-S3
+DO  -> GPIO 7 ESP32-S3
+
+--- VOLTAGE SENSOR 0-25V (Baterai) ---
+[Sisi Terminal Sekrup (Input Ukur)]
+Terminal VCC -> OUT+ TP4056 (+ Baterai)
+Terminal GND -> OUT- TP4056 (GND Sistem)
+
+[Sisi Header Pin (ke ESP32)]
+Pin S -> GPIO 5 ESP32-S3 (ADC1_CH4)
+Pin - -> GND ESP32-S3
+Pin + -> KOSONG (JANGAN DISAMBUNG)
+
+--- LORA RA-02 SX1278 (Radio 433 MHz) ---
+*PERINGATAN: Pasang antena sebelum diberi daya!
+3.3V -> 3V3 ESP32-S3 (Pasang elco 100uF + 100nF dekat pin ini)
+GND  -> GND ESP32-S3
+SCK  -> GPIO 12 ESP32-S3
+MISO -> GPIO 13 ESP32-S3
+MOSI -> GPIO 11 ESP32-S3
+NSS  -> GPIO 10 ESP32-S3
+RST  -> GPIO 14 ESP32-S3
+DIO0 -> GPIO 21 ESP32-S3
+DIO1 s/d DIO5 -> KOSONG (NC)
+
+--- RELAY 1-CH 3V (Alarm) ---
+[Sisi Pin Kontrol]
+DC+ -> 3V3 ESP32-S3 (Koil 3V, JANGAN 5V!)
+DC- -> GND ESP32-S3
+IN  -> GPIO 6 ESP32-S3 (+ Pasang resistor 10k ke GND)
+Jumper Trigger -> Posisi HIGH
+
+[Sisi Terminal Kontak Beban]
+COM -> OUT+ TP4056 (lewat Fuse 2A)
+NO  -> Menuju (+) Buzzer & (+) LED COB
+NC  -> KOSONG (NC)
+
+--- BEBAN ALARM (Buzzer & LED COB) ---
+Buzzer (+)     -> Pin NO Relay
+Buzzer (-)     -> GND Sistem
+LED COB 3V (+) -> Resistor 4.7 Ohm 1W -> Pin NO Relay
+LED COB 3V (-) -> GND Sistem
+*Catatan: JANGAN ambil daya dari 3V3 ESP32 (bikin crash)!
+
+--- JALUR DAYA NODE SENSOR ---
+Solar 5V (+) -> Dioda 1N5819 -> IN+ TP4056
+Solar 5V (-) -> IN- TP4056
+2x 18650 (+) -> B+ TP4056 (Paralel 1S2P)
+2x 18650 (-) -> B- TP4056
+OUT+ TP4056  -> Fuse 2A -> VIN+ MT3608 & COM Relay
+OUT- TP4056  -> VIN- MT3608 & GND Sistem (Semua GND ke sini)
+MT3608 VOUT+ -> Pin 5V ESP32-S3 (SETEL 5.0V SEBELUM DICOLOK!)
+MT3608 VOUT- -> Pin GND ESP32-S3
+
+
+========================================
+2. GATEWAY POSKO (ESP32 WROOM-32)
+========================================
+
+--- LORA RA-02 SX1278 (Gateway) ---
+3.3V -> 3V3 ESP32
+GND  -> GND ESP32
+SCK  -> GPIO 18 ESP32
+MISO -> GPIO 19 ESP32
+MOSI -> GPIO 23 ESP32
+NSS  -> GPIO 5 ESP32
+RST  -> GPIO 14 ESP32
+DIO0 -> GPIO 26 ESP32
+
+--- LCD 16x2 I2C (PCF8574) ---
+*Disarankan pakai Level Shifter 3.3V <-> 5V
+VCC -> Pin 5V / VIN ESP32
+GND -> GND ESP32
+SDA -> Level Shifter sisi 5V -> sisi 3.3V ke GPIO 21 ESP32
+SCL -> Level Shifter sisi 5V -> sisi 3.3V ke GPIO 22 ESP32
+
+--- FITUR TAMBAHAN GATEWAY (OPSIONAL) ---
+Buzzer Posko (+) -> GPIO 25 (via Driver Transistor)
+Tombol Mute      -> GPIO 27 (kaki lain ke GND)
+
+
+========================================
+3. ATURAN PENTING & PIN DILARANG
+========================================
+1. JANGAN SAMBUNG APAPUN KE PIN INI PADA S3 N16R8:
+   - GPIO 35, 36, 37 (Octal PSRAM -> boot-loop/crash)
+   - GPIO 19, 20 (USB Native / Serial Monitor)
+   - GPIO 43, 44 (UART0 Debug)
+   - GPIO 0, 3, 45, 46 (Strapping)
+2. Ground (GND) sistem wajib di OUT- TP4056 (BUKAN B-),
+   supaya modul proteksi baterai DW01 tetap bekerja.
+3. Putar trimpot MT3608 sampai pas 5.0V SEBELUM dicolok
+   ke pin 5V ESP32.
+4. JANGAN pernah mentransmisikan LoRa tanpa antena terpasang!
+========================================

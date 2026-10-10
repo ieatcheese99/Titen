@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F8FAFC",
-    "theme_color": "#059669",
+    "theme_color": "#0284C7",
     "description": "TITEN - IoT Disaster Early Warning System untuk mitigasi tanah longsor & kebakaran hutan (MAGE 12).",
     "orientation": "any",
     "prefer_related_applications": false,

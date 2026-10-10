@@ -24,27 +24,21 @@ class BentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveAccent = accentColor ?? (isWarning ? TitenColors.statusAwasLongsor : TitenColors.tacticalCyan);
+    final tokens = context.titenTokens;
+    final effectiveAccent = accentColor ?? (isWarning ? tokens.critical.fg : tokens.syncing.fg);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: TitenColors.surfaceWhite,
-          borderRadius: BorderRadius.circular(16),
+          color: tokens.surfacePanel,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isWarning ? effectiveAccent.withOpacity(0.5) : TitenColors.outlineBorder,
+            color: isWarning ? tokens.critical.border : tokens.borderSubtle,
             width: isWarning ? 1.5 : 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +60,7 @@ class BentoCard extends StatelessWidget {
                       label.toUpperCase(),
                       style: TitenTypography.dataLabel.copyWith(
                         fontSize: 11,
-                        color: TitenColors.textMuted,
+                        color: tokens.textMetadata,
                       ),
                     ),
                   ],
@@ -74,7 +68,7 @@ class BentoCard extends StatelessWidget {
                 Icon(
                   isWarning ? Icons.trending_up : Icons.trending_flat,
                   size: 16,
-                  color: isWarning ? TitenColors.statusAwasLongsor : TitenColors.statusAman,
+                  color: isWarning ? tokens.critical.fg : tokens.normal.fg,
                 ),
               ],
             ),
@@ -82,17 +76,17 @@ class BentoCard extends StatelessWidget {
             // Value
             Text(
               value,
-              style: TitenTypography.dataDisplay.copyWith(
-                fontSize: 24,
-                color: isWarning ? effectiveAccent : TitenColors.textMain,
-              ),
+              style: TitenTypography.value(
+                color: isWarning ? effectiveAccent : tokens.textPrimary,
+              ).copyWith(fontSize: 22, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             // Subtitle & Status
             Text(
               subtitle,
-              style: TitenTypography.bodySmall.copyWith(
-                color: isWarning ? effectiveAccent : TitenColors.textMuted,
+              style: TitenTypography.metadata(
+                color: isWarning ? effectiveAccent : tokens.textMetadata,
+              ).copyWith(
                 fontWeight: isWarning ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

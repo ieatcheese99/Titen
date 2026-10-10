@@ -1,282 +1,227 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../features/dashboard/application/dashboard_providers.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_typography.dart';
+import 'mode_chip.dart';
 
+/// Top Bar conforming to 03_APP_FLUTTER_SPEC.md §4.2
+/// Contains registry location, last sync time, ModeChip, and navigation shortcuts
+/// without synthetic organization or avatar placeholders
 class CustomTopBar extends ConsumerWidget implements PreferredSizeWidget {
-  final String title;
-  final ValueChanged<String>? onSearch;
+  final String? locationName;
+  final VoidCallback? onSearchTap;
 
-  const CustomTopBar({
-    super.key,
-    this.title = 'Disaster Monitoring Overview',
-    this.onSearch,
-  });
+  const CustomTopBar({super.key, this.locationName, this.onSearchTap});
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize => const Size.fromHeight(70);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.titenTokens;
+    final isCompact = MediaQuery.sizeOf(context).width < 520;
     final alertsAsync = ref.watch(alertsProvider);
-    final hasActiveAlert = alertsAsync.value?.any((a) => !a.resolved) ?? false;
+    final activeAlertCount =
+        alertsAsync.value?.where((a) => !a.resolved).length ?? 0;
+    final nodes = ref.watch(allNodesProvider).value ?? [];
+    final mode = ref.watch(dataSourceModeProvider);
+    final receivedTimes =
+        nodes
+            .map((node) => node.receivedAt ?? node.lastSeen)
+            .whereType<DateTime>()
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
+    final syncTimeStr = receivedTimes.isEmpty
+        ? 'Belum ada data'
+        : '${DateFormat('HH:mm:ss').format(receivedTimes.first.toUtc().add(const Duration(hours: 7)))} WIB';
+    final locatedCount = nodes.where((node) => node.hasValidCoordinates).length;
+    final displayLocation =
+        locationName ??
+        (mode.isDemo
+            ? 'Area simulasi · koordinat demo'
+            : locatedCount == 0
+            ? 'Lokasi node belum disetel'
+            : '$locatedCount node berkoordinat');
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: const BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        border: Border(bottom: BorderSide(color: TitenColors.outlineBorder)),
+      decoration: BoxDecoration(
+        color: tokens.surfacePanel,
+        border: Border(
+          bottom: BorderSide(color: tokens.borderSubtle, width: 1),
+        ),
       ),
       child: SafeArea(
         bottom: false,
-        child: Row(
-          children: [
-            // Left Title / Branding
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: TitenColors.primaryAccent.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(
-                          Icons.landscape_rounded,
-                          size: 16,
-                          color: TitenColors.primaryAccent,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'TITEN System',
-                        style: TitenTypography.titleLarge.copyWith(
-                          color: TitenColors.primaryAccent,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    title,
-                    style: TitenTypography.headlineMedium.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            // Search pill / icon
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: TitenColors.baseBackground,
-                shape: BoxShape.circle,
-                border: Border.all(color: TitenColors.outlineBorder),
-              ),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.search, size: 18, color: TitenColors.textMuted),
-                onPressed: () {
-                  // Show search sheet or quick node search
-                  _showSearchDialog(context, ref);
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            // Notification Bell with Badge
-            Stack(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: TitenColors.baseBackground,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: TitenColors.outlineBorder),
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.notifications_outlined, size: 19, color: TitenColors.textMain),
-                    onPressed: () {
-                      _showNotificationsDialog(context, ref);
-                    },
-                  ),
-                ),
-                if (hasActiveAlert)
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: TitenColors.statusAwasLongsor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 8),
-
-            // User Avatar
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: TitenColors.primaryAccent,
-                shape: BoxShape.circle,
-                border: Border.all(color: TitenColors.outlineBorder, width: 1.5),
-              ),
-              child: const Center(
-                child: Text(
-                  'TR',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSearchDialog(BuildContext context, WidgetRef ref) {
-    final nodesAsync = ref.read(allNodesProvider);
-    final nodes = nodesAsync.value ?? [];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: TitenColors.surfaceWhite,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            top: 20,
-            left: 20,
-            right: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
             children: [
-              Text(
-                'Cari Sensor & Lokasi',
-                style: TitenTypography.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Ketik nama node, mis. Tebing, Hutan...',
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 250),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: nodes.length,
-                  itemBuilder: (ctx, i) {
-                    final n = nodes[i];
-                    return ListTile(
-                      dense: true,
-                      leading: Icon(
-                        Icons.sensors,
-                        color: n.lastStatusLevel == 0
-                            ? TitenColors.statusAman
-                            : TitenColors.statusAwasLongsor,
-                      ),
-                      title: Text(n.name, style: TitenTypography.bodyLarge),
-                      subtitle: Text('Status: ${n.statusText} • Baterai ${n.batteryPct}%'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showNotificationsDialog(BuildContext context, WidgetRef ref) {
-    final alerts = ref.read(alertsProvider).value ?? [];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: TitenColors.surfaceWhite,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Notifikasi Peringatan', style: TitenTypography.titleLarge),
-                  Text('${alerts.length} Terkini', style: TitenTypography.bodySmall),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (alerts.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Column(
+              // Left: Brand Logo & Registry Location
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle_outline, size: 40, color: TitenColors.statusAman),
-                        const SizedBox(height: 8),
-                        Text('Tidak ada peringatan aktif.', style: TitenTypography.bodyLarge),
-                        Text('Semua sektor dalam kondisi aman & stabil.', style: TitenTypography.bodySmall),
+                        Flexible(
+                          child: Text(
+                            'TITEN',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                TitenTypography.sectionTitle(
+                                  color: tokens.actionPrimaryBg,
+                                ).copyWith(
+                                  letterSpacing: 1.0,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const ModeChip(),
                       ],
                     ),
-                  ),
-                )
-              else
-                ...alerts.map((a) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.warning, color: TitenColors.statusAwasLongsor),
-                        title: Text(a.title, style: TitenTypography.bodyLarge),
-                        subtitle: Text(a.description, style: TitenTypography.bodySmall),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 12,
+                          color: tokens.textMetadata,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '$displayLocation · $syncTimeStr',
+                            style:
+                                TitenTypography.metadata(
+                                  color: tokens.textSecondary,
+                                ).copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Action Buttons: Alerts Badge & Settings Link
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Search icon
+                  if (!isCompact)
+                    IconButton(
+                      icon: Icon(
+                        Icons.search,
+                        size: 20,
+                        color: tokens.textSecondary,
                       ),
-                    )),
+                      tooltip: 'Cari Node',
+                      onPressed: () {
+                        if (onSearchTap != null) {
+                          onSearchTap!();
+                        } else {
+                          context.go('/devices');
+                        }
+                      },
+                    ),
+                  // Alert Notification with Count Badge
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.notifications_outlined,
+                          size: 20,
+                          color: tokens.textSecondary,
+                        ),
+                        tooltip: 'Peringatan Bencana',
+                        onPressed: () => context.go('/alerts'),
+                      ),
+                      if (activeAlertCount > 0)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: tokens.critical.fg,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$activeAlertCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  // Settings / Tools button
+                  if (!isCompact)
+                    IconButton(
+                      icon: Icon(
+                        Icons.tune_outlined,
+                        size: 20,
+                        color: tokens.textSecondary,
+                      ),
+                      tooltip: 'Alat & Pengaturan',
+                      onPressed: () => context.go('/tools/settings'),
+                    ),
+                  if (isCompact)
+                    PopupMenuButton<String>(
+                      tooltip: 'Menu aplikasi',
+                      icon: Icon(Icons.more_horiz, color: tokens.textSecondary),
+                      onSelected: (value) {
+                        if (value == 'search') {
+                          if (onSearchTap != null) {
+                            onSearchTap!();
+                          } else {
+                            context.go('/devices');
+                          }
+                        } else {
+                          context.go('/tools/settings');
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(
+                          value: 'search',
+                          child: Text('Cari node'),
+                        ),
+                        PopupMenuItem(
+                          value: 'settings',
+                          child: Text('Alat & pengaturan'),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
 import '../../../core/constants/hazard_constants.dart';
+import '../../../core/widgets/status_badge.dart';
+import '../../../core/widgets/telemetry_tile.dart';
+import '../../../core/widgets/sparkline_widget.dart';
+import '../../../core/widgets/cache_status_footer.dart';
 import '../../dashboard/application/dashboard_providers.dart';
-import '../../analytics/application/analytics_providers.dart';
+import '../../emergency/presentation/widgets/relay_action_sheet.dart';
 
+/// Sensor Detail Screen conforming to 03_APP_FLUTTER_SPEC.md §4.3
 class SensorDetailScreen extends ConsumerWidget {
   final int nodeId;
 
@@ -15,37 +19,60 @@ class SensorDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.titenTokens;
     final nodeAsync = ref.watch(singleNodeProvider(nodeId));
+    final repo = ref.watch(nodeRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detail Node 0$nodeId', style: TitenTypography.titleLarge),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+        title: Text(
+          'Detail Telemetri Node ${nodeId.toString().padLeft(2, '0')}',
+          style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 18),
         ),
       ),
       body: nodeAsync.when(
         data: (node) {
           if (node == null) {
-            return const Center(child: Text('Sensor tidak ditemukan.'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.search_off_outlined, size: 48, color: tokens.textMetadata),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Node $nodeId tidak ditemukan pada registry.',
+                      style: TitenTypography.body(color: tokens.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
-          final color = getStatusColor(node.lastStatusLevel, node.lastHazardType);
           final tele = node.lastTelemetry;
+          final freshness = node.getFreshness();
+          final receivedStr = node.receivedAt != null
+              ? DateFormat('dd MMM yyyy, HH:mm:ss').format(node.receivedAt!)
+              : (node.lastSeen != null ? DateFormat('HH:mm:ss').format(node.lastSeen!) : '—');
+
+          final locationStr = (node.latitude != null && node.longitude != null)
+              ? '${node.latitude!.toStringAsFixed(4)}, ${node.longitude!.toStringAsFixed(4)}'
+              : 'Lokasi belum diatur di registry';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Header Card with Status Badge
+                // 1. M09 NodeIdentity Header Card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: TitenColors.surfaceWhite,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: TitenColors.outlineBorder),
+                    color: tokens.surfacePanel,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: tokens.borderSubtle, width: 1),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,42 +84,50 @@ class SensorDetailScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(node.name, style: TitenTypography.headlineMedium.copyWith(fontSize: 18)),
+                                Text(
+                                  node.name,
+                                  style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(
+                                    fontSize: 16,
+                                  ),
+                                ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Tipe: ${node.nodeType.toUpperCase()} • LoRa 915MHz SX1276',
-                                  style: TitenTypography.bodySmall,
+                                  'Key: ${node.nodeKey} • Tipe: ${node.nodeType ?? "Geologis"}',
+                                  style: TitenTypography.technical(color: tokens.textMetadata).copyWith(
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: color),
-                            ),
-                            child: Text(
-                              node.statusText,
-                              style: TextStyle(color: color, fontWeight: FontWeight.bold),
-                            ),
+                          Row(
+                            children: [
+                              StatusBadge(statusLevel: node.lastStatusLevel, hazardType: node.lastHazardType),
+                              const SizedBox(width: 4),
+                              StatusBadge(freshness: freshness),
+                            ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Koordinat: ${node.latitude.toStringAsFixed(4)}, ${node.longitude.toStringAsFixed(4)}',
-                            style: TitenTypography.dataLabel.copyWith(fontSize: 10),
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_outlined, size: 13, color: tokens.textMetadata),
+                              const SizedBox(width: 4),
+                              Text(locationStr, style: TitenTypography.technical(color: tokens.textMetadata)),
+                            ],
                           ),
-                          Text(
-                            'Last seen: ${DateFormat('HH:mm:ss').format(node.lastSeen)}',
-                            style: TitenTypography.dataLabel.copyWith(fontSize: 10),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time, size: 13, color: tokens.textMetadata),
+                              const SizedBox(width: 4),
+                              Text('Diterima: $receivedStr', style: TitenTypography.technical(color: tokens.textMetadata)),
+                            ],
                           ),
                         ],
                       ),
@@ -100,190 +135,177 @@ class SensorDetailScreen extends ConsumerWidget {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // 2. Physical Multi-Sensor Telemetry Section (FR-1.4)
-                Text('TELEMETRI MULTI-SENSOR FISIK:', style: TitenTypography.dataLabel),
+                // 2. Physical Multi-Sensor Telemetry Grid (M10 TelemetryTile)
+                Text(
+                  'PENGUKURAN MULTI-SENSOR FISIK',
+                  style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                    fontSize: 12,
+                  ),
+                ),
                 const SizedBox(height: 10),
 
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 800;
+                    final isTablet = constraints.maxWidth >= 550;
+                    final crossAxisCount = isTablet ? 3 : 2;
 
-                    final card1 = _teleCard(
-                      'Kemiringan Lereng (MPU6050)',
-                      '${tele?.tiltDeg ?? 0}°',
-                      'Batas Bahaya: > ${HazardConstants.landslideTiltThresholdDeg}°',
-                      Icons.screen_rotation_alt,
-                      (tele?.tiltDeg ?? 0) > HazardConstants.landslideTiltThresholdDeg,
-                    );
-                    final card2 = _teleCard(
-                      'Kelembapan Tanah (Capacitive)',
-                      '${tele?.soilMoisturePct ?? 0}%',
-                      'Batas Bahaya: > ${HazardConstants.landslideSoilMoistureThreshold}%',
-                      Icons.water_drop,
-                      (tele?.soilMoisturePct ?? 0) > HazardConstants.landslideSoilMoistureThreshold,
-                    );
-                    final card3 = _teleCard(
-                      'Suhu Udara (DHT22)',
-                      '${tele?.airTempC ?? 0}°C',
-                      'Batas Bahaya: > ${HazardConstants.karhutlaTempThresholdC}°C',
-                      Icons.thermostat,
-                      (tele?.airTempC ?? 0) > HazardConstants.karhutlaTempThresholdC,
-                    );
-                    final card4 = _teleCard(
-                      'Kelembapan Udara (DHT22)',
-                      '${tele?.airHumidityPct ?? 0}%',
-                      'Batas Bahaya: < ${HazardConstants.karhutlaHumidityThreshold}%',
-                      Icons.air,
-                      (tele?.airHumidityPct ?? 0) < HazardConstants.karhutlaHumidityThreshold,
-                    );
-
-                    if (isWide) {
-                      return Row(
-                        children: [
-                          Expanded(child: card1),
-                          const SizedBox(width: 12),
-                          Expanded(child: card2),
-                          const SizedBox(width: 12),
-                          Expanded(child: card3),
-                          const SizedBox(width: 12),
-                          Expanded(child: card4),
-                        ],
-                      );
-                    }
-
-                    return Column(
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: isTablet ? 1.4 : 1.15,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(child: card1),
-                            const SizedBox(width: 12),
-                            Expanded(child: card2),
-                          ],
+                        TelemetryTile(
+                          label: 'Kemiringan Lereng (MPU6050)',
+                          value: tele?.tiltDeg,
+                          unit: '°',
+                          thresholdDesc: 'Batas Bahaya: > ${HazardConstants.landslideTiltThresholdDeg}°',
+                          icon: Icons.screen_rotation_alt,
+                          isAnomalous: (tele?.tiltDeg ?? 0) > HazardConstants.landslideTiltThresholdDeg,
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(child: card3),
-                            const SizedBox(width: 12),
-                            Expanded(child: card4),
-                          ],
+                        TelemetryTile(
+                          label: 'Kelembapan Tanah Relatif',
+                          value: tele?.soilMoisturePct,
+                          unit: '%',
+                          thresholdDesc: 'Kejenuhan Kritis: > ${HazardConstants.landslideSoilMoistureThreshold}%',
+                          icon: Icons.water_drop_outlined,
+                          isAnomalous: (tele?.soilMoisturePct ?? 0) > HazardConstants.landslideSoilMoistureThreshold,
+                        ),
+                        TelemetryTile(
+                          label: 'Suhu Lingkungan (DHT22)',
+                          value: tele?.airTempC,
+                          unit: '°C',
+                          thresholdDesc: 'Suhu Ekstrem: > ${HazardConstants.karhutlaTempThresholdC}°C',
+                          icon: Icons.thermostat_outlined,
+                          isAnomalous: (tele?.airTempC ?? 0) > HazardConstants.karhutlaTempThresholdC,
+                        ),
+                        TelemetryTile(
+                          label: 'Kelembapan Udara (DHT22)',
+                          value: tele?.airHumidityPct,
+                          unit: '%RH',
+                          thresholdDesc: 'Udara Kering: < ${HazardConstants.karhutlaHumidityThreshold}%',
+                          icon: Icons.air,
+                          isAnomalous: tele?.airHumidityPct != null &&
+                              tele!.airHumidityPct! < HazardConstants.karhutlaHumidityThreshold,
+                        ),
+                        TelemetryTile(
+                          label: 'Estimasi Baterai',
+                          value: node.batteryPct,
+                          unit: '%',
+                          thresholdDesc: 'Baterai Minimum: 20%',
+                          icon: Icons.battery_charging_full,
+                        ),
+                        TelemetryTile(
+                          label: 'Kekuatan Sinyal (LoRa RSSI)',
+                          value: node.loraRssi,
+                          unit: 'dBm',
+                          thresholdDesc: node.loraSnr != null ? 'SNR: ${node.loraSnr} dB' : null,
+                          icon: Icons.wifi_tethering,
                         ),
                       ],
                     );
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // 3. Hardware Health & Telemetry Diagnostics (BMS, LoRa)
-                Text('KESEHATAN PERANGKAT & JARINGAN:', style: TitenTypography.dataLabel),
-                const SizedBox(height: 10),
+                // 3. Sparkline Historical Trend (M11 Sparkline)
+                StreamBuilder(
+                  stream: repo.watchTelemetryHistory(nodeId),
+                  builder: (context, snapshot) {
+                    final history = snapshot.data ?? [];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SparklineWidget(
+                          title: 'Tren Kemiringan Lereng (°)',
+                          unit: '°',
+                          history: history,
+                          valueExtractor: (t) => t.tiltDeg,
+                          lineColor: tokens.critical.fg,
+                        ),
+                        const SizedBox(height: 10),
+                        SparklineWidget(
+                          title: 'Tren Kelembapan Tanah Relatif (%)',
+                          unit: '%',
+                          history: history,
+                          valueExtractor: (t) => t.soilMoisturePct,
+                          lineColor: tokens.syncing.fg,
+                        ),
+                      ],
+                    );
+                  },
+                ),
 
+                const SizedBox(height: 16),
+
+                // 4. Confirmed Relay Actuation Card (M12/M13/M14)
+                RelayControlCard(
+                  nodeId: node.nodeId,
+                  nodeName: node.name,
+                ),
+
+                const SizedBox(height: 16),
+
+                // 5. Radio Profile Metadata
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: TitenColors.surfaceWhite,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: TitenColors.outlineBorder),
+                    color: tokens.surfacePanel,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: tokens.borderSubtle, width: 1),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _diagRow('Catu Daya (SoPoWake Solar + 18650 BMS)', '${node.batteryPct}% (Optimal 3.92V)', Icons.solar_power_outlined),
-                      const Divider(height: 20),
-                      _diagRow('Kekuatan Sinyal Radio (LoRa RSSI)', '${node.loraRssi} dBm (Sangat Baik)', Icons.cell_tower),
-                      const Divider(height: 20),
-                      _diagRow('Signal-to-Noise Ratio (LoRa SNR)', '${node.loraSnr} dB', Icons.network_check),
-                      const Divider(height: 20),
-                      _diagRow('Mode Daya Mikrokontroler', 'ESP32 Deep Sleep (< 15µA)', Icons.bedtime_outlined),
+                      Text(
+                        'METADATA PROFIL HARDWARE & RADIO',
+                        style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                      const SizedBox(height: 8),
+                      _row(tokens, 'Modul Radio', 'LoRa SX1278 (433.0 MHz SPI)'),
+                      _row(tokens, 'Pinout CS/RST/DIO0', 'GPIO 5 / GPIO 14 / GPIO 2'),
+                      _row(tokens, 'Sensor MPU6050', 'I2C (SDA GPIO 21, SCL GPIO 22)'),
+                      _row(tokens, 'Sensor DHT22 / Soil', 'GPIO 4 / GPIO 34 (ADC1)'),
+                      _row(tokens, 'Output Relay Sirine', 'GPIO 25 (Active High Transistor Drive)'),
                     ],
                   ),
                 ),
 
+                const SizedBox(height: 20),
+                const CacheStatusFooter(),
                 const SizedBox(height: 24),
-
-                // 4. Action Buttons
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.show_chart),
-                    label: const Text('Buka Tren Grafik 7-Hari Node Ini'),
-                    onPressed: () {
-                      ref.read(selectedNodeIdForAnalyticsProvider.notifier).state = node.nodeId;
-                      context.go('/analytics');
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 30),
               ],
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Gagal memuat detail sensor')),
+        error: (err, _) => Center(child: Text('Error: $err')),
       ),
     );
   }
 
-  Widget _teleCard(String title, String value, String thresholdText, IconData icon, bool isWarning) {
-    final color = isWarning ? TitenColors.statusAwasLongsor : TitenColors.primaryAccent;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isWarning ? color : TitenColors.outlineBorder,
-          width: isWarning ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _row(TitenTokens tokens, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, size: 18, color: color),
-              if (isWarning)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text('BAHAYA', style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(value, style: TitenTypography.dataDisplay.copyWith(fontSize: 22, color: isWarning ? color : TitenColors.textMain)),
-          const SizedBox(height: 2),
-          Text(title, style: TitenTypography.bodySmall.copyWith(fontSize: 11, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(thresholdText, style: TitenTypography.dataLabel.copyWith(fontSize: 9, color: TitenColors.textMuted)),
+          Text(label, style: TitenTypography.metadata(color: tokens.textSecondary).copyWith(fontSize: 12)),
+          Text(value, style: TitenTypography.technical(color: tokens.textPrimary).copyWith(fontSize: 12)),
         ],
       ),
-    );
-  }
-
-  Widget _diagRow(String title, String value, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: TitenColors.textMuted),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TitenTypography.bodyMedium.copyWith(fontSize: 12.5)),
-              Text(value, style: TitenTypography.dataValue.copyWith(fontSize: 12.5, color: TitenColors.primaryAccent)),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

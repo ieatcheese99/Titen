@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TITEN 3D Node Blueprint & Mechanical CAD</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Three.js and OrbitControls CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineSegmentsGeometry.js"></script>
+
+  <style>
+    :root {
+      --bg-blueprint: #060d19;
+      --bg-panel: rgba(10, 20, 36, 0.88);
+      --bg-panel-subtle: rgba(16, 32, 58, 0.7);
+      --border-blue: rgba(45, 140, 255, 0.35);
+      --border-cyan: rgba(0, 238, 255, 0.4);
+      --accent-cyan: #00eeff;
+      --accent-blue: #2d8cff;
+      --accent-gold: #ffbe2e;
+      --accent-emerald: #00f298;
+      --accent-crimson: #ff3b60;
+      --text-main: #f0f6fc;
+      --text-muted: #8b9bb4;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-ui: 'Space Grotesk', -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-blueprint);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* 3D WebGL Canvas */
+    #webgl-canvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      cursor: grab;
+    }
+    #webgl-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Technical Grid Overlay */
+    .blueprint-grid-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(rgba(45, 140, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45, 140, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(rgba(0, 238, 255, 0.02) 20px, transparent 20px),
+        linear-gradient(90deg, rgba(0, 238, 255, 0.02) 20px, transparent 20px);
+      background-size: 40px 40px, 40px 40px, 200px 200px, 200px 200px;
+      mix-blend-mode: screen;
+      z-index: 1;
+    }
+
+    /* Vignette */
+    .vignette-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 40%, rgba(3, 7, 15, 0.75) 100%);
+      z-index: 2;
+    }
+
+    /* Top Navigation & Status HUD */
+    .hud-topbar {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .brand-block {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-panel);
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border-cyan);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 238, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(0, 238, 255, 0.2), rgba(45, 140, 255, 0.3));
+      border: 1px solid var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-cyan);
+      font-size: 20px;
+      box-shadow: 0 0 12px rgba(0, 238, 255, 0.3);
+    }
+
+    .brand-info h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-info h1 span.badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      background: rgba(0, 238, 255, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid var(--border-cyan);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+
+    .brand-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Top Center Preset Views */
+    .view-presets {
+      pointer-events: auto;
+      display: flex;
+      gap: 6px;
+      background: var(--bg-panel);
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border-blue);
+      backdrop-filter: blur(10px);
+    }
+
+    .preset-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .preset-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .preset-btn.active {
+      color: var(--accent-cyan);
+      background: rgba(0, 238, 255, 0.12);
+      border-color: var(--border-cyan);
+      box-shadow: 0 0 10px rgba(0, 238, 255, 0.2);
+    }
+
+    /* Top Right Actions */
+    .topbar-actions {
+      pointer-events: auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    .hud-button {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-blue);
+      color: var(--text-main);
+      padding: 9px 15px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      backdrop-filter: blur(10px);
+    }
+    .hud-button:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0, 238, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    .hud-button.primary {
+      background: linear-gradient(135deg, rgba(0, 162, 255, 0.3), rgba(0, 238, 255, 0.2));
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    /* Floating Left Controls (Shading & Exploded view) */
+    .controls-dock-left {
+      position: absolute;
+      top: 90px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 260px;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .card-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-blue);
+      border-radius: 12px;
+      padding: 14px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-header {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header i {
+      color: var(--accent-blue);
+    }
+
+    /* Render Mode Toggles */
+    .render-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .mode-tab {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .mode-tab.active {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      background: rgba(0, 238, 255, 0.12);
+      font-weight: 700;
+    }
+
+    /* Sliders */
+    .slider-group {
+      margin-top: 10px;
+    }
+    .slider-title {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .slider-title span.val {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+    .custom-range {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .custom-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--accent-cyan);
+      border: 2px solid #fff;
+    }
+
+    /* Layer Toggles */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+    .toggle-row:last-child {
+      border-bottom: none;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .switch-slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      transition: 0.25s;
+    }
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.25s;
+    }
+    .toggle-switch input:checked + .switch-slider {
+      background: var(--accent-cyan);
+    }
+    .toggle-switch input:checked + .switch-slider:before {
+      transform: translateX(16px);
+      background: #031020;
+    }
+
+    /* Right Inspection Drawer */
+    .inspector-drawer {
+      position: absolute;
+      top: 90px;
+      right: 20px;
+      width: 360px;
+      max-height: calc(100vh - 120px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10;
+      pointer-events: auto;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .inspector-drawer::-webkit-scrollbar {
+      width: 5px;
+    }
+    .inspector-drawer::-webkit-scrollbar-thumb {
+      background: var(--border-blue);
+      border-radius: 4px;
+    }
+
+    /* Interactive Component Pill List */
+    .component-nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 160px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .component-nav-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .component-nav-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .comp-item-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .comp-item-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .comp-item-btn.selected {
+      background: rgba(0, 238, 255, 0.12);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+    .comp-tag {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* Detail Card */
+    .detail-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-cyan);
+      border-radius: 12px;
+      padding: 16px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .detail-badge-chip {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0, 238, 255, 0.15);
+      border: 1px solid var(--border-cyan);
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .detail-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      padding-right: 70px;
+    }
+
+    .detail-subtitle {
+      font-size: 11px;
+      color: var(--accent-blue);
+      font-family: var(--font-mono);
+      margin-bottom: 12px;
+    }
+
+    /* Real Photo Preview Box */
+    .real-photo-preview {
+      width: 100%;
+      height: 140px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-blue);
+      margin-bottom: 12px;
+      position: relative;
+      background: #000;
+    }
+
+    .real-photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .real-photo-preview:hover img {
+      transform: scale(1.05);
+    }
+
+    .photo-caption-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 4px 8px;
+      background: rgba(3, 10, 22, 0.85);
+      backdrop-filter: blur(4px);
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      color: var(--accent-gold);
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .detail-desc {
+      font-size: 11.5px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .pinout-table-wrapper {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .pinout-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      font-family: var(--font-mono);
+    }
+
+    .pinout-table th {
+      background: rgba(45, 140, 255, 0.15);
+      color: var(--accent-cyan);
+      text-align: left;
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+
+    .pinout-table td {
+      padding: 5px 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .pin-badge {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 9.5px;
+      font-weight: 700;
+    }
+    .pin-pwr { background: rgba(255, 59, 96, 0.2); color: #ff6e8a; }
+    .pin-gnd { background: rgba(255, 255, 255, 0.15); color: #ccc; }
+    .pin-io { background: rgba(0, 238, 255, 0.18); color: var(--accent-cyan); }
+    .pin-spi { background: rgba(255, 190, 46, 0.2); color: var(--accent-gold); }
+
+    /* Bottom Breadboard Visualizer Dock (Collapsible) */
+    .breadboard-guide-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-blue);
+      border-radius: 12px;
+      padding: 14px;
+      backdrop-filter: blur(14px);
+    }
+
+    .breadboard-grid-svg {
+      width: 100%;
+      height: 110px;
+      background: #040913;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 238, 255, 0.2);
+      display: block;
+      margin-top: 8px;
+    }
+
+    /* Bottom Floating Action Bar */
+    .hud-bottom-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-panel);
+      padding: 8px 18px;
+      border-radius: 30px;
+      border: 1px solid var(--border-cyan);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 238, 255, 0.18);
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .bb-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-cyan);
+    }
+
+    .bb-icon {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 8px var(--accent-emerald);
+      animation: pulseDot 1.5s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .dimension-chip {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 12px;
+    }
+
+    .dimension-chip span {
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    /* Tooltip / Hover Label in 3D */
+    #tooltip3d {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      background: rgba(3, 10, 22, 0.92);
+      border: 1px solid var(--accent-cyan);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 238, 255, 0.3);
+      z-index: 100;
+      transform: translate(-50%, -130%);
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+    }
+
+    #tooltip3d .sub {
+      font-size: 9px;
+      color: var(--accent-gold);
+      display: block;
+    }
+
+    /* Audio Synth Feedback Indicator */
+    .audio-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.2s;
+    }
+    .audio-btn:hover {
+      color: var(--accent-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Grids & Vignette -->
+  <div class="blueprint-grid-overlay"></div>
+  <div class="vignette-overlay"></div>
+
+  <!-- 3D Three.js Canvas -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- 3D Hover Tooltip -->
+  <div id="tooltip3d">
+    <span id="tooltip-text">Komponen</span>
+    <span class="sub" id="tooltip-sub">Klik untuk melihat detail pinout</span>
+  </div>
+
+  <!-- Top Navigation & Status Bar -->
+  <header class="hud-topbar">
+    <div class="brand-block">
+      <div class="brand-icon">
+        <i class="fa-solid fa-cube"></i>
+      </div>
+      <div class="brand-info">
+        <h1>TITEN NODE CAD <span class="badge">V2.4-PRO</span></h1>
+        <p>SMK BUDI LUHUR &bull; MAGE 12 ITS &bull; ENCLOSURE BLUEPRINT</p>
+      </div>
+    </div>
+
+    <!-- Center Camera Preset Views -->
+    <div class="view-presets">
+      <button class="preset-btn active" onclick="setCameraView('iso')">
+        <i class="fa-solid fa-cube"></i> Isometric
+      </button>
+      <button class="preset-btn" onclick="setCameraView('top')">
+        <i class="fa-solid fa-arrows-to-dot"></i> Top (Breadboard)
+      </button>
+      <button class="preset-btn" onclick="setCameraView('front')">
+        <i class="fa-solid fa-border-all"></i> Front
+      </button>
+      <button class="preset-btn" onclick="setCameraView('side')">
+        <i class="fa-solid fa-tower-broadcast"></i> Side (SMA)
+      </button>
+      <button class="preset-btn" onclick="setCameraView('ground')">
+        <i class="fa-solid fa-seedling"></i> Ground Probe
+      </button>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="topbar-actions">
+      <button class="hud-button" onclick="takeSnapshot()" title="Simpan gambar blueprint CAD resolusi tinggi">
+        <i class="fa-solid fa-camera"></i> Snapshot
+      </button>
+      <a href="index.html" class="hud-button primary" title="Kembali ke Dashboard Web TITEN">
+        <i class="fa-solid fa-gauge-high"></i> Ke Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Left Sidebar Controls -->
+  <aside class="controls-dock-left">
+    <!-- Render Shader Mode -->
+    <div class="card-panel">
+      <div class="panel-header">
+        <span>Tampilan Shading</span>
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="render-mode-grid">
+        <div class="mode-tab active" id="tab-solid" onclick="setRenderMode('solid')">Solid PBR</div>
+        <div class="mode-tab" id="tab-xray" onclick="setRenderMode('xray')">X-Ray Box</div>
+        <div class="mode-tab" id="tab-wire" onclick="setRenderMode('wire')">Blueprint</div>
+      </div>
+
+      <!-- Exploded View Slider -->
+      <div class="slider-group">
+        <div class="slider-title">
+          <span>Exploded View (Meledak)</span>
+          <span class="val" id="exploded-val">0%</span>
+        </div>
+        <input type="range" min="0" max="100" value="0" class="custom-range" id="explodedSlider" oninput="updateExplodedView(this.value)">
+      </div>
+    </div>
+
+    <!-- Layer Toggles -->
+    <div class="card-panel">
+      <div class="panel-header">
+        <span>Visibilitas Elemen</span>
+        <i class="fa-solid fa-sliders"></i>
+      </div>
+      <div class="toggle-row">
+        <span>Tutup Box (Lid)</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-lid" checked onchange="toggleLayer('lid', this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Bodi Box (Casing)</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-box" checked onchange="toggleLayer('box', this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Kabel Jumper 3D</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-wires" checked onchange="toggleLayer('wires', this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Tiang & Pasak Tanah</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-mast" checked onchange="toggleLayer('mast', this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span>Label Dimensi (CAD)</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-dims" checked onchange="toggleLayer('dims', this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Quick Component Selection -->
+    <div class="card-panel">
+      <div class="panel-header">
+        <span>Daftar Komponen Node</span>
+        <i class="fa-solid fa-microchip"></i>
+      </div>
+      <div class="component-nav-list" id="comp-nav-list">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Inspection Drawer -->
+  <aside class="inspector-drawer">
+    <!-- Selected Component Detail -->
+    <div class="detail-card" id="detail-card">
+      <span class="detail-badge-chip" id="detail-category">CORE BOARD</span>
+      <h2 class="detail-title" id="detail-name">Mini Breadboard SYB-170</h2>
+      <p class="detail-subtitle" id="detail-model">170 TIE-POINTS &bull; 47 x 35 mm</p>
+
+      <!-- Real Prototype Photo -->
+      <div class="real-photo-preview" id="photo-box">
+        <img id="detail-photo" src="" alt="Hardware Real Photo">
+        <div class="photo-caption-bar">
+          <span><i class="fa-solid fa-camera"></i> Hardware Riil Tim TITEN</span>
+          <span id="detail-source">Komponen</span>
+        </div>
+      </div>
+
+      <p class="detail-desc" id="detail-desc">
+        Mini breadboard solderless untuk prototyping modular di dalam box node. Menampung modul LoRa RA-02 dan sensor gerak MPU-6050 dengan kokoh tepat di atas sumbu tiang inklinometer tebing.
+      </p>
+
+      <!-- Pinout & Wiring Table -->
+      <div class="pinout-table-wrapper">
+        <table class="pinout-table">
+          <thead>
+            <tr>
+              <th>Pin Modul</th>
+              <th>ESP32-S3</th>
+              <th>Fungsi / Sinyal</th>
+            </tr>
+          </thead>
+          <tbody id="pinout-tbody">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Installation / Placement Tip -->
+      <div style="background: rgba(0, 238, 255, 0.08); border-left: 3px solid var(--accent-cyan); padding: 8px 10px; border-radius: 4px; font-size: 11px; font-family: var(--font-mono); color: var(--text-main);">
+        <strong style="color: var(--accent-cyan);"><i class="fa-solid fa-lightbulb"></i> Tips Pemasangan:</strong>
+        <span id="detail-tip" style="display:block; margin-top:3px; color: var(--text-muted);">
+          Pasang MPU-6050 flat sejajar bidang dasar box, gunakan double tape busa 3M agar getaran tanah tersalurkan langsung tanpa getaran artifisial.
+        </span>
+      </div>
+    </div>
+
+    <!-- Mini Breadboard Layout Schematic (SYB-170 Matrix) -->
+    <div class="breadboard-guide-card">
+      <div class="panel-header">
+        <span>Matriks Slot SYB-170 (17x10)</span>
+        <span style="font-size: 10px; color: var(--accent-gold);">Baris 1 - 17</span>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+        Rancangan penempatan modul di breadboard kecil sesuai foto tangan user:
+      </p>
+      <svg class="breadboard-grid-svg" viewBox="0 0 340 110">
+        <!-- SVG Breadboard Diagram generated dynamically -->
+        <rect x="10" y="8" width="320" height="94" rx="6" fill="#e6eaef" stroke="#9bb0c4" stroke-width="2"/>
+        <line x1="20" y1="55" x2="320" y2="55" stroke="#718ba7" stroke-width="3" stroke-dasharray="4,2"/>
+        <!-- LoRa RA-02 Footprint (Rows 1-8 across center) -->
+        <rect x="25" y="16" width="125" height="78" rx="4" fill="rgba(33, 102, 214, 0.85)" stroke="#00eeff" stroke-width="1.5"/>
+        <text x="87" y="52" fill="#fff" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">LoRa RA-02</text>
+        <text x="87" y="65" fill="#a4d4ff" font-size="8" font-family="monospace" text-anchor="middle">Baris 1 s/d 8</text>
+
+        <!-- MPU-6050 Footprint (Rows 11-17 Bottom Row) -->
+        <rect x="195" y="58" width="125" height="36" rx="4" fill="rgba(0, 180, 130, 0.85)" stroke="#00f298" stroke-width="1.5"/>
+        <text x="257" y="76" fill="#fff" font-size="10" font-family="monospace" text-anchor="middle" font-weight="bold">MPU-6050 (GY-521)</text>
+        <text x="257" y="88" fill="#a1ffdd" font-size="8" font-family="monospace" text-anchor="middle">Baris 11 s/d 17</text>
+
+        <!-- Breadboard Screw Holes -->
+        <circle cx="170" cy="55" r="5" fill="#040913" stroke="#9bb0c4" stroke-width="1.5"/>
+        <text x="170" y="38" fill="#446688" font-size="8" font-family="monospace" text-anchor="middle">Junction Power</text>
+      </svg>
+    </div>
+  </aside>
+
+  <!-- Bottom Floating Info Bar -->
+  <footer class="hud-bottom-bar">
+    <div class="bb-badge">
+      <div class="bb-icon"></div>
+      <span>TITEN HARDWARE MESH NODE</span>
+    </div>
+    <div class="dimension-chip">
+      Ukuran Box: <span>150 x 95 x 65 mm</span>
+    </div>
+    <div class="dimension-chip">
+      Breadboard: <span>SYB-170 (47x35mm)</span>
+    </div>
+    <div class="dimension-chip">
+      Antena: <span>SMA 433 MHz Pigtail</span>
+    </div>
+    <div class="dimension-chip">
+      Tiang Inklinometer: <span>Extrusion 20x20 mm</span>
+    </div>
+    <button class="audio-btn" id="audio-toggle" onclick="toggleAudio()" title="Suara Efek Klik">
+      <i class="fa-solid fa-volume-high"></i>
+    </button>
+  </footer>
+
+  <script>
+    /* =========================================================================
+       TITEN 3D BLUEPRINT - INTERACTIVE CAD ENGINE (Three.js WebGL)
+       SMK Budi Luhur - MAGE 12 ITS (2026)
+       ========================================================================= */
+
+    // Sound Synthesizer via Web Audio API
+    let audioCtx = null;
+    let audioEnabled = true;
+
+    function playBeep(freq = 800, type = 'sine', duration = 0.08) {
+      if (!audioEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.querySelector('#audio-toggle i');
+      if (audioEnabled) {
+        icon.className = 'fa-solid fa-volume-high';
+        playBeep(900, 'sine', 0.1);
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark';
+      }
+    }
+
+    // Component Database & Real Photos Map
+    const COMPONENTS_DB = [
+      {
+        id: 'breadboard',
+        name: 'Mini Breadboard SYB-170',
+        model: '170 Tie-Points Solderless (17x10 Grid)',
+        category: 'PLATFORM',
+        photo: 'Komponen/breadboard_user.png',
+        source: 'Foto Tangan Asli User (SYB-170)',
+        desc: 'Breadboard kecil 17 kolom x 10 baris dengan parit tengah 2.54mm pitch. Sempurna untuk menampung modul LoRa RA-02 dan MPU-6050 secara rapi dan stabil di dalam box tanpa perlu solder ulang saat prototyping.',
+        tip: 'Gunakan double tape busa di bawah breadboard dan kencangkan sekrup di kedua telinga lubangnya langsung ke dasar box.',
+        pinout: [
+          { pin: 'Baris 1-8', target: 'Slot LoRa RA-02', desc: 'SCK, MISO, MOSI, NSS, RST, DIO0, VCC, GND' },
+          { pin: 'Baris 9', target: 'Common Rail', desc: 'Jalur jumper distribusi 3.3V & GND' },
+          { pin: 'Baris 10-17', target: 'Slot MPU-6050', desc: 'VCC, GND, SCL, SDA, INT (Ext0 Wakeup)' }
+        ]
+      },
+      {
+        id: 'esp32s3',
+        name: 'ESP32-S3-N16R8 + GPIO Extension',
+        model: 'Dual Xtensa LX7 @240MHz, 16MB Flash, 8MB PSRAM',
+        category: 'MCU UTAMA',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.22.jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Otak komputasi tepi (Edge Computing) dengan dukungan AI TinyML, PSRAM 8MB untuk buffer sinyal getaran lereng, dan 2x USB Type-C port untuk flashing & serial debugging.',
+        tip: 'PERINGATAN: GPIO 26 s.d. 32 dilarang digunakan karena terhubung internal ke Octal PSRAM & Flash 16MB!',
+        pinout: [
+          { pin: '3.3V & GND', target: 'Power Bus', desc: 'Regulator tegangan on-board' },
+          { pin: 'GPIO 8 (SDA)', target: 'MPU-6050 SDA', desc: 'I2C Data line hardware' },
+          { pin: 'GPIO 9 (SCL)', target: 'MPU-6050 SCL', desc: 'I2C Clock line hardware' },
+          { pin: 'GPIO 4 (INT)', target: 'MPU-6050 INT', desc: 'RTC Ext0 Deep Sleep Wakeup' },
+          { pin: 'GPIO 10-14, 21', target: 'LoRa SPI & DIO0', desc: 'Komunikasi Radio LoRa 433MHz' },
+          { pin: 'GPIO 1', target: 'Soil Sensor (AOUT)', desc: 'ADC1_CH0 12-bit analog input' },
+          { pin: 'GPIO 2', target: 'DHT22 DATA', desc: 'Single-bus temperature/humidity' },
+          { pin: 'GPIO 3', target: 'Flame DO', desc: 'Active-LOW digital fire trigger' },
+          { pin: 'GPIO 5', target: 'Voltage Sensor (S)', desc: 'ADC1_CH4 Battery Divider' },
+          { pin: 'GPIO 6', target: 'Relay 1-Ch (IN)', desc: 'Aktuator lokal sirine & lampu' }
+        ]
+      },
+      {
+        id: 'lora',
+        name: 'LoRa RA-02 (SX1278 433MHz)',
+        model: 'Ai-Thinker LoRa Breakout + IPEX to SMA',
+        category: 'TELEMETRI RF',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.23 (1).jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Modul transmisi radio jarak jauh (Long Range) hingga 2–10 km tanpa sinyal seluler atau internet. Mengirim data telemetri ke Posko Gateway melalui konektor IPEX ke antena eksternal SMA box.',
+        tip: 'Wajib disuplai 3.3V! Jangan pernah hubungkan ke 5V atau modul SX1278 akan rusak permanen.',
+        pinout: [
+          { pin: 'VCC', target: 'ESP32 3.3V', desc: 'Wajib 3.3V murni' },
+          { pin: 'GND', target: 'ESP32 GND', desc: 'Ground bersama' },
+          { pin: 'SCK', target: 'GPIO 12', desc: 'Hardware SPI Clock' },
+          { pin: 'MISO', target: 'GPIO 13', desc: 'Hardware SPI MISO' },
+          { pin: 'MOSI', target: 'GPIO 11', desc: 'Hardware SPI MOSI' },
+          { pin: 'NSS / CS', target: 'GPIO 10', desc: 'Chip Select' },
+          { pin: 'RST', target: 'GPIO 14', desc: 'Reset Radio' },
+          { pin: 'DIO0', target: 'GPIO 21', desc: 'Packet RX/TX Done Interrupt' }
+        ]
+      },
+      {
+        id: 'mpu6050',
+        name: 'MPU-6050 (GY-521)',
+        model: '6-Axis Gyroscope & Accelerometer + DMP',
+        category: 'SENSOR LONGSOR',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.23 (2).jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Mendeteksi pergeseran kemiringan tanah lereng (Pitch & Roll) dan getaran mikro runtuhan (vibration amplitude). Pin INT digunakan untuk membangunkan ESP32 dari Deep Sleep secara instan saat terjadi longsor.',
+        tip: 'Ditempatkan di mini breadboard tepat di atas titik jangkar tiang aluminium agar pembacaan sudut lereng presisi 0.1 derajat.',
+        pinout: [
+          { pin: 'VCC', target: 'ESP32 3.3V', desc: 'Tegangan stabil' },
+          { pin: 'GND', target: 'ESP32 GND', desc: 'Ground bersama' },
+          { pin: 'SDA', target: 'GPIO 8', desc: 'I2C Serial Data' },
+          { pin: 'SCL', target: 'GPIO 9', desc: 'I2C Serial Clock' },
+          { pin: 'INT', target: 'GPIO 4', desc: 'Hardware Wakeup Interrupt' }
+        ]
+      },
+      {
+        id: 'dht22',
+        name: 'DHT22 / AM2302',
+        model: 'Digital Temperature & Relative Humidity Sensor',
+        category: 'SENSOR KARHUTLA',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.23 (3).jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Mendeteksi lonjakan suhu panas udara ekstrem (>45°C) dan kelembapan udara sangat kering (<25% RH) sebagai indikator kritis potensi kebakaran hutan di sekitar lereng.',
+        tip: 'Diposisikan dekat ventilasi atau dinding samping box dengan kisi pelindung hujan agar sensor dapat bernapas bebas.',
+        pinout: [
+          { pin: 'VCC (+)', target: 'ESP32 3.3V', desc: 'Daya sensor' },
+          { pin: 'DATA (out)', target: 'GPIO 2', desc: 'Single-bus dengan pullup 10k internal' },
+          { pin: 'GND (-)', target: 'ESP32 GND', desc: 'Ground bersama' }
+        ]
+      },
+      {
+        id: 'flame',
+        name: 'KY-026 / HW-072 Flame Sensor',
+        model: 'Infrared Flame Detector (760nm - 1100nm)',
+        category: 'SENSOR KARHUTLA',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.24.jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Mendeteksi radiasi foton inframerah dari nyala api terbuka kebakaran semak/hutan. Memberikan sinyal aktif digital LOW saat ada api dalam radius visual 1–2 meter.',
+        tip: 'Diarahkan keluar melalui aperture/jendela transparan di dinding depan box.',
+        pinout: [
+          { pin: 'VCC', target: 'ESP32 3.3V', desc: 'Daya 3.3V' },
+          { pin: 'GND', target: 'ESP32 GND', desc: 'Ground bersama' },
+          { pin: 'DO', target: 'GPIO 3', desc: 'Digital Output (LOW = Ada Api)' }
+        ]
+      },
+      {
+        id: 'relay',
+        name: '1-Channel Relay 3.3V/5V',
+        model: 'BESTEP Opto-Isolated 10A 250VAC / 30VDC',
+        category: 'AKTUATOR LOKAL',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.23.jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Mengendalikan sirkuit daya tinggi sirine 85dB dan lampu LED COB Strobe untuk peringatan evakuasi instan di lokasi (<500ms) tanpa menunggu respon dari server internet.',
+        tip: 'Terisolasi optokopler untuk mencegah lonjakan elektromagnetik koil relay mempengaruhi ESP32.',
+        pinout: [
+          { pin: 'VCC', target: 'ESP32 3.3V / 5V', desc: 'Daya koil relay' },
+          { pin: 'GND', target: 'ESP32 GND', desc: 'Ground bersama' },
+          { pin: 'IN', target: 'GPIO 6', desc: 'Trigger digital aktif HIGH' },
+          { pin: 'COM & NO', target: 'Buzzer & LED COB', desc: 'Saklar sirkuit sirine darurat' }
+        ]
+      },
+      {
+        id: 'voltage',
+        name: 'Voltage Sensor 0–25V Module',
+        model: 'Resistive Voltage Divider (5:1 Ratio)',
+        category: 'POWER MONITOR',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.24 (1).jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Membagi tegangan baterai Li-ion 18650 (3.0V – 4.2V) dengan rasio 5:1 menjadi 0.6V – 0.84V yang aman dibaca oleh ADC1 ESP32-S3.',
+        tip: 'Koneksikan terminal biru (+) ke kutub baterai positif dan (-) ke Ground baterai.',
+        pinout: [
+          { pin: 'VCC (+)', target: 'Baterai 18650 (+)', desc: 'Terminal sekrup input daya' },
+          { pin: 'GND (-)', target: 'Baterai 18650 (-)', desc: 'Ground referensi' },
+          { pin: 'S (Signal)', target: 'GPIO 5', desc: 'ADC1_CH4 Analog Input' }
+        ]
+      },
+      {
+        id: 'soil',
+        name: 'Capacitive Soil Moisture V2.0',
+        model: 'HW-390 Corrosion-Resistant Soil Probe',
+        category: 'SENSOR LONGSOR',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.27.jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Mengukur kejenuhan air di dalam tanah tebing lereng berbasis kapasitansi tanpa kontak logam langsung, sehingga tahan karat dan korosi bertahun-tahun di tanah lembap.',
+        tip: 'Kabel sensor dialirkan dari dalam box turun menembus pipa tiang aluminium langsung ke kedalaman tanah 30-50 cm.',
+        pinout: [
+          { pin: 'VCC', target: 'ESP32 3.3V', desc: 'Wajib 3.3V agar tidak merusak ADC' },
+          { pin: 'GND', target: 'ESP32 GND', desc: 'Ground bersama' },
+          { pin: 'AOUT', target: 'GPIO 1', desc: 'ADC1_CH0 Analog (1300-3100)' }
+        ]
+      },
+      {
+        id: 'siren_cob',
+        name: 'Sirine Buzzer 85dB & LED COB',
+        model: 'Piezo Alarm + High-Power COB Strobe 3V',
+        category: 'AKTUATOR LOKAL',
+        photo: 'Komponen/WhatsApp Image 2026-10-05 at 18.22.25.jpeg',
+        source: 'c:/laragon/www/Titen/Komponen/',
+        desc: 'Perangkat alarm peringatan lokal yang terpasang di bodi luar box node. Memberikan sinyal visual kilat malam hari dan audio melengking saat tebing mulai runtuh.',
+        tip: 'Dipasang di sisi luar box dengan segel silikon tahan air IP65.',
+        pinout: [
+          { pin: 'Sirine (+)', target: 'Relay NO Contact', desc: 'Daya tersaklar' },
+          { pin: 'LED Strip (+)', target: 'Relay NO Contact', desc: 'Daya tersaklar' },
+          { pin: 'GND (-)', target: 'Baterai (-)', desc: 'Ground bersama' }
+        ]
+      },
+      {
+        id: 'box_node',
+        name: 'Enclosure Box & Tiang Tiang',
+        model: 'Weatherproof ABS Enclosure + SMA Jack + Pole',
+        category: 'MEKANIKAL',
+        photo: 'Box node/WhatsApp Image 2026-10-05 at 19.28.15.jpeg',
+        source: 'c:/laragon/www/Titen/Box node/',
+        desc: 'Box pelindung cuaca ABS putih abu-abu dipasang kokoh di atas tiang aluminium ekstrusi profil 20x20mm yang ditancapkan ke tanah lereng. Pada sisi kiri box terdapat lubang konektor jack bulkhead female SMA untuk antena LoRa.',
+        tip: 'Pastikan mur konektor SMA dikencangkan dengan rubber washer kedap air agar tidak ada rembesan air hujan.',
+        pinout: [
+          { pin: 'SMA Jack', target: 'Pigtail u.FL LoRa', desc: 'Kabel koaksial RG178 ke RA-02' },
+          { pin: 'Tiang Ekstrusi', target: 'Anchor Pasak Tanah', desc: 'Penyalur getaran tanah ke MPU-6050' }
+        ]
+      }
+    ];
+
+    // Three.js Core Variables
+    let scene, camera, renderer, controls;
+    let mainGroup, boxGroup, lidGroup, breadboardGroup, esp32Group, loraGroup, mpuGroup, relayGroup;
+    let sensorsGroup, wiresGroup, mastGroup, dimsGroup, groundGroup;
+    let raycaster, mouse;
+    let highlightedMesh = null;
+    let renderMode = 'solid'; // 'solid', 'xray', 'wire'
+    let explodedRatio = 0;
+
+    // Component Meshes Map for interaction
+    const interactiveMeshes = [];
+
+    function initThree() {
+      const canvas = document.getElementById('webgl-canvas');
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // 1. Scene
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x060d19);
+      scene.fog = new THREE.FogExp2(0x060d19, 0.0035);
+
+      // 2. Camera
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.set(160, 140, 200);
+
+      // 3. Renderer
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+
+      // 4. OrbitControls
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2 + 0.1; // allow slight under-view
+      controls.minDistance = 40;
+      controls.maxDistance = 600;
+      controls.target.set(0, 10, 0);
+
+      // 5. Lighting
+      const ambientLight = new THREE.AmbientLight(0xd0e4ff, 0.65);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.1);
+      dirLight1.position.set(120, 180, 100);
+      dirLight1.castShadow = true;
+      dirLight1.shadow.mapSize.width = 2048;
+      dirLight1.shadow.mapSize.height = 2048;
+      dirLight1.shadow.bias = -0.0005;
+      scene.add(dirLight1);
+
+      const blueRimLight = new THREE.DirectionalLight(0x00d0ff, 0.85);
+      blueRimLight.position.set(-150, 80, -120);
+      scene.add(blueRimLight);
+
+      const warmAccentLight = new THREE.PointLight(0xffbe2e, 0.8, 150);
+      warmAccentLight.position.set(0, 25, 10);
+      scene.add(warmAccentLight);
+
+      // 6. Raycaster & Mouse
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      // Groups Hierarchy
+      mainGroup = new THREE.Group();
+      boxGroup = new THREE.Group();
+      lidGroup = new THREE.Group();
+      breadboardGroup = new THREE.Group();
+      esp32Group = new THREE.Group();
+      loraGroup = new THREE.Group();
+      mpuGroup = new THREE.Group();
+      relayGroup = new THREE.Group();
+      sensorsGroup = new THREE.Group();
+      wiresGroup = new THREE.Group();
+      mastGroup = new THREE.Group();
+      dimsGroup = new THREE.Group();
+      groundGroup = new THREE.Group();
+
+      mainGroup.add(boxGroup);
+      mainGroup.add(lidGroup);
+      mainGroup.add(breadboardGroup);
+      mainGroup.add(esp32Group);
+      mainGroup.add(loraGroup);
+      mainGroup.add(mpuGroup);
+      mainGroup.add(relayGroup);
+      mainGroup.add(sensorsGroup);
+      mainGroup.add(wiresGroup);
+      mainGroup.add(mastGroup);
+      mainGroup.add(dimsGroup);
+      mainGroup.add(groundGroup);
+
+      scene.add(mainGroup);
+
+      // Build 3D CAD Geometry
+      buildCadModels();
+
+      // Populate UI
+      populateComponentNav();
+      selectComponent('breadboard');
+
+      // Listeners
+      window.addEventListener('resize', onWindowResize);
+      canvas.addEventListener('mousemove', onCanvasMouseMove);
+      canvas.addEventListener('click', onCanvasClick);
+
+      // Start Render Loop
+      animate();
+    }
+
+    // Material Helpers
+    const materials = {
+      boxPlastic: new THREE.MeshStandardMaterial({
+        color: 0xd4d8df,
+        roughness: 0.35,
+        metalness: 0.1,
+        name: 'boxPlastic'
+      }),
+      boxLidSolid: new THREE.MeshStandardMaterial({
+        color: 0xe2e7ee,
+        roughness: 0.25,
+        metalness: 0.15,
+        transparent: true,
+        opacity: 0.95,
+        name: 'boxLidSolid'
+      }),
+      boxLidXray: new THREE.MeshPhysicalMaterial({
+        color: 0x88ccff,
+        roughness: 0.1,
+        transmission: 0.88,
+        transparent: true,
+        opacity: 0.35,
+        reflectivity: 0.9,
+        clearcoat: 1.0,
+        name: 'boxLidXray'
+      }),
+      aluminum: new THREE.MeshStandardMaterial({
+        color: 0xdde4ec,
+        roughness: 0.3,
+        metalness: 0.88
+      }),
+      goldBrass: new THREE.MeshStandardMaterial({
+        color: 0xffcc33,
+        roughness: 0.2,
+        metalness: 0.92
+      }),
+      breadboardPlastic: new THREE.MeshStandardMaterial({
+        color: 0xf4f6f9,
+        roughness: 0.45,
+        metalness: 0.05
+      }),
+      pcbBlue: new THREE.MeshStandardMaterial({
+        color: 0x14529f,
+        roughness: 0.3,
+        metalness: 0.2
+      }),
+      pcbBlack: new THREE.MeshStandardMaterial({
+        color: 0x1c1e22,
+        roughness: 0.35,
+        metalness: 0.3
+      }),
+      pcbGreen: new THREE.MeshStandardMaterial({
+        color: 0x127a3c,
+        roughness: 0.35,
+        metalness: 0.2
+      }),
+      relayBlue: new THREE.MeshStandardMaterial({
+        color: 0x106ee8,
+        roughness: 0.2,
+        metalness: 0.1
+      }),
+      metalCan: new THREE.MeshStandardMaterial({
+        color: 0xc8d0db,
+        roughness: 0.2,
+        metalness: 0.85
+      }),
+      rubberBlack: new THREE.MeshStandardMaterial({
+        color: 0x222428,
+        roughness: 0.7,
+        metalness: 0.1
+      }),
+      ledYellow: new THREE.MeshStandardMaterial({
+        color: 0xffdd22,
+        emissive: 0xffaa00,
+        emissiveIntensity: 0.4,
+        roughness: 0.3
+      }),
+      solarPanel: new THREE.MeshStandardMaterial({
+        color: 0x0f2240,
+        roughness: 0.1,
+        metalness: 0.8,
+        name: 'solarPanel'
+      }),
+      soilGround: new THREE.MeshStandardMaterial({
+        color: 0x3d2719,
+        roughness: 0.9,
+        metalness: 0.05
+      })
+    };
+
+    function registerInteractive(mesh, compId, displayName, subText) {
+      mesh.userData = { compId, displayName, subText };
+      interactiveMeshes.push(mesh);
+    }
+
+    /* =========================================================================
+       BUILD 3D CAD MODELS
+       ========================================================================= */
+    function buildCadModels() {
+      // 1. ENCLOSURE BOX BASE (150 x 95 x 60 mm)
+      // Main box outer shell
+      const boxWidth = 150;
+      const boxDepth = 95;
+      const boxHeight = 55;
+      const wallThick = 4;
+
+      const outerBoxGeo = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+      const boxMesh = new THREE.Mesh(outerBoxGeo, materials.boxPlastic);
+      boxMesh.position.set(0, boxHeight / 2, 0);
+      boxMesh.castShadow = true;
+      boxMesh.receiveShadow = true;
+      boxGroup.add(boxMesh);
+      registerInteractive(boxMesh, 'box_node', 'Enclosure Box Base (ABS)', '150 x 95 x 55 mm');
+
+      // Inner hollow cutout appearance (dark interior floor)
+      const innerFloorGeo = new THREE.PlaneGeometry(boxWidth - wallThick * 2, boxDepth - wallThick * 2);
+      const innerFloorMat = new THREE.MeshStandardMaterial({ color: 0x2b313c, roughness: 0.7 });
+      const innerFloor = new THREE.Mesh(innerFloorGeo, innerFloorMat);
+      innerFloor.rotation.x = -Math.PI / 2;
+      innerFloor.position.set(0, wallThick + 0.1, 0);
+      boxGroup.add(innerFloor);
+
+      // SMA BULKHEAD JACK (Left side wall, exactly matching user's photo!)
+      const smaGroup = new THREE.Group();
+      smaGroup.position.set(-boxWidth / 2 - 1, boxHeight * 0.45, 0);
+
+      // Hex nut
+      const hexNutGeo = new THREE.CylinderGeometry(5.5, 5.5, 3.5, 6);
+      hexNutGeo.rotateZ(Math.PI / 2);
+      const hexNut = new THREE.Mesh(hexNutGeo, materials.goldBrass);
+      smaGroup.add(hexNut);
+
+      // Gold Thread barrel
+      const barrelGeo = new THREE.CylinderGeometry(3.5, 3.5, 8, 20);
+      barrelGeo.rotateZ(Math.PI / 2);
+      const barrel = new THREE.Mesh(barrelGeo, materials.goldBrass);
+      barrel.position.x = -4;
+      smaGroup.add(barrel);
+
+      // Center gold contact pin
+      const centerPinGeo = new THREE.CylinderGeometry(0.7, 0.7, 4, 12);
+      centerPinGeo.rotateZ(Math.PI / 2);
+      const centerPin = new THREE.Mesh(centerPinGeo, materials.goldBrass);
+      centerPin.position.x = -7;
+      smaGroup.add(centerPin);
+
+      // 433MHz Rubber Duck Antenna (Flexible Whip pointing up)
+      const antBaseGeo = new THREE.CylinderGeometry(4.5, 5, 14, 16);
+      antBaseGeo.rotateZ(Math.PI / 2);
+      const antBase = new THREE.Mesh(antBaseGeo, materials.rubberBlack);
+      antBase.position.x = -11;
+      smaGroup.add(antBase);
+
+      const antWhipGeo = new THREE.CylinderGeometry(2.5, 3.5, 85, 16);
+      const antWhip = new THREE.Mesh(antWhipGeo, materials.rubberBlack);
+      antWhip.position.set(-15, 42, 0);
+      smaGroup.add(antWhip);
+
+      registerInteractive(barrel, 'box_node', 'Konektor Antena SMA 433MHz', 'Bulkhead Female Jack');
+      registerInteractive(antWhip, 'lora', 'Antena Rubber Duck 433MHz', 'Gain 3dBi Long Range');
+      boxGroup.add(smaGroup);
+
+      // Pigtail Coaxial cable running from SMA jack to LoRa IPEX inside box
+      const pigtailCurve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(-boxWidth / 2 + 3, boxHeight * 0.45, 0),
+        new THREE.Vector3(-45, boxHeight * 0.35, 10),
+        new THREE.Vector3(-25, 15, -15),
+        new THREE.Vector3(-10, 16, -10)
+      );
+      const pigtailGeo = new THREE.TubeGeometry(pigtailCurve, 20, 1.2, 8, false);
+      const pigtailMesh = new THREE.Mesh(pigtailGeo, materials.rubberBlack);
+      boxGroup.add(pigtailMesh);
+
+      // 2. ENCLOSURE LID (Top cover with rubber gasket)
+      const lidThick = 8;
+      const lidGeo = new THREE.BoxGeometry(boxWidth + 2, lidThick, boxDepth + 2);
+      const lidMesh = new THREE.Mesh(lidGeo, materials.boxLidSolid);
+      lidMesh.position.set(0, boxHeight + lidThick / 2, 0);
+      lidMesh.castShadow = true;
+      lidGroup.add(lidMesh);
+      registerInteractive(lidMesh, 'box_node', 'Penutup Box (Lid Weatherproof)', 'Bisa Transparan / Dilepas');
+
+      // Lid 4 Corner Screws
+      const screwGeo = new THREE.CylinderGeometry(2.2, 2.2, 2, 12);
+      [
+        [-boxWidth / 2 + 7, -boxDepth / 2 + 7],
+        [boxWidth / 2 - 7, -boxDepth / 2 + 7],
+        [-boxWidth / 2 + 7, boxDepth / 2 - 7],
+        [boxWidth / 2 - 7, boxDepth / 2 - 7]
+      ].forEach(pos => {
+        const screw = new THREE.Mesh(screwGeo, materials.metalCan);
+        screw.position.set(pos[0], boxHeight + lidThick + 0.1, pos[1]);
+        lidGroup.add(screw);
+      });
+
+      // Solar mini panel on top of lid
+      const solarPanelGeo = new THREE.BoxGeometry(90, 2, 60);
+      const solarPanel = new THREE.Mesh(solarPanelGeo, materials.solarPanel);
+      solarPanel.position.set(0, boxHeight + lidThick + 2, 0);
+      lidGroup.add(solarPanel);
+
+      // 3. MINI BREADBOARD SYB-170 (Exact dimensions: 47 x 35 x 9 mm)
+      // Placed on the left/center bottom of the box
+      const bbW = 47;
+      const bbD = 35;
+      const bbH = 9;
+      const bbX = -12;
+      const bbZ = -6;
+      const bbY = wallThick + bbH / 2;
+
+      const bbBodyGeo = new THREE.BoxGeometry(bbW, bbH, bbD);
+      const bbMesh = new THREE.Mesh(bbBodyGeo, materials.breadboardPlastic);
+      bbMesh.position.set(bbX, bbY, bbZ);
+      bbMesh.castShadow = true;
+      breadboardGroup.add(bbMesh);
+      registerInteractive(bbMesh, 'breadboard', 'Mini Breadboard SYB-170', '17 Kolom x 10 Baris (47x35mm)');
+
+      // Center Divider Trough on Breadboard
+      const troughGeo = new THREE.BoxGeometry(bbW, 1.8, 3.2);
+      const troughMat = new THREE.MeshStandardMaterial({ color: 0xc4cbd5, roughness: 0.7 });
+      const troughMesh = new THREE.Mesh(troughGeo, troughMat);
+      troughMesh.position.set(bbX, bbY + bbH / 2 - 0.7, bbZ);
+      breadboardGroup.add(troughMesh);
+
+      // Breadboard 2 Side Screw Wings
+      const wingGeo = new THREE.BoxGeometry(4, 3, 8);
+      const wingLeft = new THREE.Mesh(wingGeo, materials.breadboardPlastic);
+      wingLeft.position.set(bbX - bbW / 2 - 2, bbY - 2, bbZ);
+      breadboardGroup.add(wingLeft);
+
+      const wingRight = new THREE.Mesh(wingGeo, materials.breadboardPlastic);
+      wingRight.position.set(bbX + bbW / 2 + 2, bbY - 2, bbZ);
+      breadboardGroup.add(wingRight);
+
+      // Contact Holes Matrix Points (visual dots)
+      const holesGeo = new THREE.BufferGeometry();
+      const holePositions = [];
+      for (let r = 0; r < 17; r++) {
+        const xPos = bbX - bbW / 2 + 3.5 + r * 2.5;
+        // 5 holes top, 5 holes bottom
+        for (let c = 0; c < 5; c++) {
+          const zPosTop = bbZ - bbD / 2 + 3.2 + c * 2.4;
+          holePositions.push(xPos, bbY + bbH / 2 + 0.1, zPosTop);
+          const zPosBot = bbZ + bbD / 2 - 3.2 - c * 2.4;
+          holePositions.push(xPos, bbY + bbH / 2 + 0.1, zPosBot);
+        }
+      }
+      holesGeo.setAttribute('position', new THREE.Float32BufferAttribute(holePositions, 3));
+      const holesMat = new THREE.PointsMaterial({ color: 0x334455, size: 1.2 });
+      const holesPoints = new THREE.Points(holesGeo, holesMat);
+      breadboardGroup.add(holesPoints);
+
+      // 4. LORA RA-02 BREAKOUT BOARD (Plugged into Breadboard Rows 1 to 8 across trough)
+      const loraW = 24;
+      const loraD = 27;
+      const loraH = 2.5;
+      const loraX = bbX - 10;
+      const loraZ = bbZ;
+      const loraY = bbY + bbH / 2 + loraH / 2 + 3; // lifted slightly on pin headers
+
+      const loraPcbGeo = new THREE.BoxGeometry(loraW, loraH, loraD);
+      const loraMesh = new THREE.Mesh(loraPcbGeo, materials.pcbBlue);
+      loraMesh.position.set(loraX, loraY, loraZ);
+      loraMesh.castShadow = true;
+      loraGroup.add(loraMesh);
+      registerInteractive(loraMesh, 'lora', 'Modul LoRa RA-02 (SX1278)', 'SPI Radio Transceiver 433MHz');
+
+      // LoRa Metal Shield Can (Ai-Thinker)
+      const loraShieldGeo = new THREE.BoxGeometry(16, 2, 17);
+      const loraShield = new THREE.Mesh(loraShieldGeo, materials.metalCan);
+      loraShield.position.set(loraX, loraY + loraH / 2 + 1, loraZ - 1);
+      loraGroup.add(loraShield);
+      registerInteractive(loraShield, 'lora', 'Metal Shield RA-02', 'Ai-Thinker SX1278 RF Shield');
+
+      // IPEX / U.FL Gold Connector on LoRa PCB
+      const ipexGeo = new THREE.CylinderGeometry(1.4, 1.4, 1.2, 12);
+      const ipex = new THREE.Mesh(ipexGeo, materials.goldBrass);
+      ipex.position.set(loraX - 7, loraY + loraH / 2 + 0.6, loraZ - 8);
+      loraGroup.add(ipex);
+
+      // 5. MPU-6050 (GY-521) ACCELEROMETER/GYROSCOPE (Plugged in Breadboard Rows 11-17)
+      const mpuW = 16;
+      const mpuD = 21;
+      const mpuH = 2;
+      const mpuX = bbX + 11;
+      const mpuZ = bbZ + 3;
+      const mpuY = bbY + bbH / 2 + mpuH / 2 + 3;
+
+      const mpuPcbGeo = new THREE.BoxGeometry(mpuW, mpuH, mpuD);
+      const mpuMesh = new THREE.Mesh(mpuPcbGeo, materials.pcbBlue);
+      mpuMesh.position.set(mpuX, mpuY, mpuZ);
+      mpuMesh.castShadow = true;
+      mpuGroup.add(mpuMesh);
+      registerInteractive(mpuMesh, 'mpu6050', 'MPU-6050 (GY-521)', 'Sensor Inklinometer & Getaran Tebing');
+
+      // MPU IC QFN-24 Chip
+      const mpuIcGeo = new THREE.BoxGeometry(5, 1, 5);
+      const mpuIc = new THREE.Mesh(mpuIcGeo, materials.pcbBlack);
+      mpuIc.position.set(mpuX, mpuY + mpuH / 2 + 0.5, mpuZ);
+      mpuGroup.add(mpuIc);
+
+      // Axis Orientation Arrow indicator (+X, +Y)
+      const axisGeo = new THREE.BoxGeometry(6, 0.4, 1);
+      const axisMesh = new THREE.Mesh(axisGeo, materials.goldBrass);
+      axisMesh.position.set(mpuX + 3, mpuY + mpuH / 2 + 0.3, mpuZ);
+      mpuGroup.add(axisMesh);
+
+      // 6. ESP32-S3-N16R8 BOARD (Mounted on the right side floor of the box)
+      const espW = 60;
+      const espD = 50;
+      const espH = 5;
+      const espX = 42;
+      const espZ = -2;
+      const espY = wallThick + espH / 2 + 4; // mounted on standoff spacers
+
+      const espPcbGeo = new THREE.BoxGeometry(espW, espH, espD);
+      const espMesh = new THREE.Mesh(espPcbGeo, materials.pcbBlack);
+      espMesh.position.set(espX, espY, espZ);
+      espMesh.castShadow = true;
+      esp32Group.add(espMesh);
+      registerInteractive(espMesh, 'esp32s3', 'ESP32-S3-N16R8 + GPIO Extension', 'Dual Core AI, 16MB Flash, 8MB PSRAM');
+
+      // ESP32 Metal RF Shield Module
+      const espShieldGeo = new THREE.BoxGeometry(18, 2.5, 26);
+      const espShield = new THREE.Mesh(espShieldGeo, materials.metalCan);
+      espShield.position.set(espX - 12, espY + espH / 2 + 1.25, espZ);
+      esp32Group.add(espShield);
+
+      // Dual Type-C USB Ports
+      const usbGeo = new THREE.BoxGeometry(8, 3.5, 7.5);
+      const usb1 = new THREE.Mesh(usbGeo, materials.metalCan);
+      usb1.position.set(espX + espW / 2 - 4, espY + 2, espZ - 10);
+      esp32Group.add(usb1);
+
+      const usb2 = new THREE.Mesh(usbGeo, materials.metalCan);
+      usb2.position.set(espX + espW / 2 - 4, espY + 2, espZ + 10);
+      esp32Group.add(usb2);
+
+      // Yellow & Red Extension Headers
+      const headerGeo = new THREE.BoxGeometry(espW - 10, 4, 3);
+      const headerYellowMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.4 });
+      const headerRedMat = new THREE.MeshStandardMaterial({ color: 0xcc2222, roughness: 0.4 });
+
+      const header1 = new THREE.Mesh(headerGeo, headerYellowMat);
+      header1.position.set(espX, espY + espH / 2 + 2, espZ - espD / 2 + 4);
+      esp32Group.add(header1);
+
+      const header2 = new THREE.Mesh(headerGeo, headerRedMat);
+      header2.position.set(espX, espY + espH / 2 + 2, espZ + espD / 2 - 4);
+      esp32Group.add(header2);
+
+      // 7. 1-CHANNEL RELAY MODULE (Placed front-right)
+      const relW = 42;
+      const relD = 22;
+      const relH = 16;
+      const relX = 38;
+      const relZ = 30;
+      const relY = wallThick + 2;
+
+      const relBaseGeo = new THREE.BoxGeometry(relW, 2, relD);
+      const relBase = new THREE.Mesh(relBaseGeo, materials.pcbBlue);
+      relBase.position.set(relX, relY + 1, relZ);
+      relayGroup.add(relBase);
+
+      const relCubeGeo = new THREE.BoxGeometry(19, relH, 15);
+      const relCube = new THREE.Mesh(relCubeGeo, materials.relayBlue);
+      relCube.position.set(relX - 8, relY + relH / 2 + 2, relZ);
+      relayGroup.add(relCube);
+      registerInteractive(relCube, 'relay', '1-Channel Relay 3.3V/5V', 'Saklar Sirine & Lampu Strobe');
+
+      // Relay Screw Terminals (Green / Blue terminal blocks)
+      const termGeo = new THREE.BoxGeometry(10, 10, 14);
+      const termMat = new THREE.MeshStandardMaterial({ color: 0x127a3c, roughness: 0.5 });
+      const termBlock = new THREE.Mesh(termGeo, termMat);
+      termBlock.position.set(relX + 13, relY + 5, relZ);
+      relayGroup.add(termBlock);
+
+      // 8. BATTERY PACK (2x 18650 Holder, placed along back wall)
+      const batHolderGeo = new THREE.BoxGeometry(76, 18, 40);
+      const batHolder = new THREE.Mesh(batHolderGeo, materials.pcbBlack);
+      batHolder.position.set(0, wallThick + 9, -28);
+      sensorsGroup.add(batHolder);
+
+      // 2x Cylindrical 18650 Cells (Cyan/Blue shrink wrap)
+      const cellGeo = new THREE.CylinderGeometry(9, 9, 65, 20);
+      cellGeo.rotateZ(Math.PI / 2);
+      const cellMat = new THREE.MeshStandardMaterial({ color: 0x1da1f2, roughness: 0.3, metalness: 0.2 });
+
+      const cell1 = new THREE.Mesh(cellGeo, cellMat);
+      cell1.position.set(0, wallThick + 12, -35);
+      sensorsGroup.add(cell1);
+
+      const cell2 = new THREE.Mesh(cellGeo, cellMat);
+      cell2.position.set(0, wallThick + 12, -21);
+      sensorsGroup.add(cell2);
+      registerInteractive(cell1, 'voltage', 'Baterai 2x 18650 Li-ion', 'Daya Mandiri 3.7V - 4.2V SoPoWake');
+
+      // 9. VOLTAGE SENSOR MODULE (Resistive Divider 0-25V)
+      const voltGeo = new THREE.BoxGeometry(26, 2, 14);
+      const voltMesh = new THREE.Mesh(voltGeo, materials.pcbBlue);
+      voltMesh.position.set(-48, wallThick + 2, -26);
+      sensorsGroup.add(voltMesh);
+      registerInteractive(voltMesh, 'voltage', 'Voltage Sensor Module 0-25V', 'Monitoring Level Baterai (GPIO 5)');
+
+      // 10. FLAME SENSOR (HW-072 / KY-026) facing front wall aperture
+      const flameGeo = new THREE.BoxGeometry(32, 2, 14);
+      const flameMesh = new THREE.Mesh(flameGeo, materials.pcbBlue);
+      flameMesh.position.set(-42, wallThick + 8, 30);
+      sensorsGroup.add(flameMesh);
+
+      // Black IR photodiode bulb pointing front (+Z)
+      const irBulbGeo = new THREE.CylinderGeometry(2.5, 2.5, 7, 16);
+      irBulbGeo.rotateX(Math.PI / 2);
+      const irBulb = new THREE.Mesh(irBulbGeo, materials.rubberBlack);
+      irBulb.position.set(-42, wallThick + 8, 40);
+      sensorsGroup.add(irBulb);
+      registerInteractive(irBulb, 'flame', 'Sensor Api Inframerah HW-072', 'Deteksi Karhutla (GPIO 3 Active LOW)');
+
+      // 11. DHT22 SENSOR (Temperature / Humidity, mounted on side wall vent)
+      const dhtGeo = new THREE.BoxGeometry(16, 26, 12);
+      const dhtMat = new THREE.MeshStandardMaterial({ color: 0xf5f7fb, roughness: 0.6 });
+      const dhtMesh = new THREE.Mesh(dhtGeo, dhtMat);
+      dhtMesh.position.set(-60, wallThick + 18, 12);
+      sensorsGroup.add(dhtMesh);
+      registerInteractive(dhtMesh, 'dht22', 'Sensor Suhu/Lembap DHT22', 'Deteksi Udara Panas & Kering (GPIO 2)');
+
+      // 12. EXTERIOR ALARM DEVICES (Siren & COB LED Strip)
+      // COB LED Warning Strobe Strip on front face of box
+      const cobGeo = new THREE.BoxGeometry(90, 10, 2);
+      const cobMesh = new THREE.Mesh(cobGeo, materials.ledYellow);
+      cobMesh.position.set(0, boxHeight * 0.5, boxDepth / 2 + 1.2);
+      sensorsGroup.add(cobMesh);
+      registerInteractive(cobMesh, 'siren_cob', 'Lampu Strobe LED COB 3V', 'Peringatan Visual Malam Hari');
+
+      // Piezo Siren (White circular horn with wings on right side face)
+      const sirenHornGeo = new THREE.CylinderGeometry(14, 14, 10, 24);
+      sirenHornGeo.rotateZ(Math.PI / 2);
+      const sirenMat = new THREE.MeshStandardMaterial({ color: 0xeff2f6, roughness: 0.4 });
+      const sirenHorn = new THREE.Mesh(sirenHornGeo, sirenMat);
+      sirenHorn.position.set(boxWidth / 2 + 5, boxHeight * 0.55, 0);
+      sensorsGroup.add(sirenHorn);
+      registerInteractive(sirenHorn, 'siren_cob', 'Sirine Evakuasi 85-90dB', 'Peringatan Audio Bencana Instan');
+
+      // 13. ALUMINUM EXTRUSION POLE / MAST (20 x 20 mm going downward)
+      const mastWidth = 18;
+      const mastHeight = 160;
+      const mastGeo = new THREE.BoxGeometry(mastWidth, mastHeight, mastWidth);
+      const mastMesh = new THREE.Mesh(mastGeo, materials.aluminum);
+      mastMesh.position.set(0, -mastHeight / 2, 0);
+      mastMesh.castShadow = true;
+      mastGroup.add(mastMesh);
+      registerInteractive(mastMesh, 'box_node', 'Tiang Inklinometer Tebing (Aluminium 20x20)', 'Meneruskan Getaran Tanah Langsung ke Box');
+
+      // Pole Mounting Flange (Bracket fixing box to pole)
+      const flangeGeo = new THREE.BoxGeometry(45, 8, 45);
+      const flange = new THREE.Mesh(flangeGeo, materials.aluminum);
+      flange.position.set(0, -4, 0);
+      mastGroup.add(flange);
+
+      // 14. GROUND & SOIL PROFILE CUTAWAY + CAPACITIVE SOIL MOISTURE SENSOR
+      const groundW = 200;
+      const groundD = 180;
+      const groundH = 45;
+      const groundY = -mastHeight + groundH / 2;
+
+      const groundGeo = new THREE.BoxGeometry(groundW, groundH, groundD);
+      const groundMesh = new THREE.Mesh(groundGeo, materials.soilGround);
+      groundMesh.position.set(0, groundY, 0);
+      groundMesh.receiveShadow = true;
+      groundGroup.add(groundMesh);
+
+      // Capacitive Soil Moisture Sensor (HW-390) inserted into ground
+      const soilProbeGeo = new THREE.BoxGeometry(16, 65, 2);
+      const soilProbe = new THREE.Mesh(soilProbeGeo, materials.pcbBlack);
+      soilProbe.position.set(0, -mastHeight + 20, 16);
+      groundGroup.add(soilProbe);
+      registerInteractive(soilProbe, 'soil', 'Capacitive Soil Sensor V2.0', 'Ditanam di Tanah Tebing (GPIO 1)');
+
+      // Cable from Soil Probe running up inside the hollow mast
+      const soilWireCurve = new THREE.LineCurve3(
+        new THREE.Vector3(0, -mastHeight + 45, 16),
+        new THREE.Vector3(0, 0, 0)
+      );
+      const soilWireGeo = new THREE.TubeGeometry(soilWireCurve, 10, 1.4, 6, false);
+      const soilWireMat = new THREE.MeshStandardMaterial({ color: 0x8844ee });
+      const soilWire = new THREE.Mesh(soilWireGeo, soilWireMat);
+      groundGroup.add(soilWire);
+
+      // 15. 3D JUMPER WIRES HARNESS (Connecting according to pinout.md)
+      createWireHarness();
+
+      // 16. TECHNICAL DIMENSION CALLOUTS (CAD Grid lines)
+      createDimensionLines(boxWidth, boxHeight, boxDepth);
+    }
+
+    // Procedural 3D Curved Jumper Wires
+    function createWireHarness() {
+      const wireDefs = [
+        // 3.3V Power Bus (Red) from ESP32 to Breadboard Row 9
+        { p1: [30, 14, -18], p2: [10, 24, -15], p3: [-2, 22, -6], p4: [-12, 14, -6], color: 0xff3355, name: '3.3V Power Bus' },
+        // Ground Bus (Black) from ESP32 to Breadboard
+        { p1: [30, 14, 18], p2: [12, 26, 12], p3: [-4, 24, -2], p4: [-14, 14, -4], color: 0x222226, name: 'GND Common' },
+        // I2C SDA (Cyan - GPIO 8) ESP32 to MPU-6050
+        { p1: [25, 14, -12], p2: [15, 28, -2], p3: [5, 26, 6], p4: [-1, 14, 2], color: 0x00eeff, name: 'I2C SDA (GPIO 8)' },
+        // I2C SCL (Yellow - GPIO 9) ESP32 to MPU-6050
+        { p1: [25, 14, -8], p2: [12, 29, 0], p3: [2, 27, 8], p4: [-3, 14, 2], color: 0xffdd00, name: 'I2C SCL (GPIO 9)' },
+        // MPU-6050 INT (Ext0 Wakeup - GPIO 4)
+        { p1: [28, 14, -4], p2: [14, 27, 4], p3: [0, 25, 10], p4: [-5, 14, 4], color: 0x00ff88, name: 'MPU INT (GPIO 4)' },
+        // LoRa SPI SCK (GPIO 12)
+        { p1: [24, 14, 6], p2: [8, 30, -5], p3: [-10, 28, -12], p4: [-20, 14, -10], color: 0xff8800, name: 'LoRa SCK (GPIO 12)' },
+        // LoRa SPI MISO (GPIO 13)
+        { p1: [24, 14, 10], p2: [6, 31, -8], p3: [-12, 29, -15], p4: [-22, 14, -10], color: 0x2288ff, name: 'LoRa MISO (GPIO 13)' },
+        // LoRa SPI MOSI (GPIO 11)
+        { p1: [24, 14, 14], p2: [4, 32, -10], p3: [-14, 30, -18], p4: [-24, 14, -10], color: 0x00cc66, name: 'LoRa MOSI (GPIO 11)' },
+        // Relay Trigger IN (Pink - GPIO 6)
+        { p1: [32, 14, 20], p2: [35, 20, 24], p3: [36, 18, 28], p4: [38, 12, 30], color: 0xff00bb, name: 'Relay IN (GPIO 6)' }
+      ];
+
+      wireDefs.forEach(w => {
+        const curve = new THREE.CubicBezierCurve3(
+          new THREE.Vector3(...w.p1),
+          new THREE.Vector3(...w.p2),
+          new THREE.Vector3(...w.p3),
+          new THREE.Vector3(...w.p4)
+        );
+        const tubeGeo = new THREE.TubeGeometry(curve, 24, 0.75, 6, false);
+        const tubeMat = new THREE.MeshStandardMaterial({
+          color: w.color,
+          roughness: 0.35,
+          metalness: 0.1
+        });
+        const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+        wiresGroup.add(tubeMesh);
+      });
+    }
+
+    // Dimension Blueprint Markers
+    function createDimensionLines(w, h, d) {
+      const dimMat = new THREE.LineBasicMaterial({ color: 0x00d0ff, transparent: true, opacity: 0.45 });
+      const pts = [];
+
+      // Box Bounding Box corners
+      const hw = w / 2 + 5;
+      const hd = d / 2 + 5;
+      const bot = 0;
+      const top = h;
+
+      // Outer Dimension Lines
+      pts.push(
+        // Length 150mm
+        new THREE.Vector3(-hw, bot - 4, -hd), new THREE.Vector3(hw, bot - 4, -hd),
+        // Width 95mm
+        new THREE.Vector3(hw + 4, bot - 4, -hd), new THREE.Vector3(hw + 4, bot - 4, hd),
+        // Height 55mm
+        new THREE.Vector3(hw + 4, bot, hd + 4), new THREE.Vector3(hw + 4, top, hd + 4)
+      );
+
+      const dimGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      const dimLines = new THREE.LineSegments(dimGeo, dimMat);
+      dimsGroup.add(dimLines);
+    }
+
+    /* =========================================================================
+       EXPLODED VIEW ANIMATION (0 to 100%)
+       ========================================================================= */
+    function updateExplodedView(val) {
+      explodedRatio = val / 100;
+      document.getElementById('exploded-val').innerText = `${Math.round(val)}%`;
+      playBeep(300 + val * 6, 'triangle', 0.04);
+
+      // Lift Lid Upwards
+      lidGroup.position.y = explodedRatio * 75;
+
+      // Float breadboard and its mounted modules
+      breadboardGroup.position.y = explodedRatio * 20;
+      loraGroup.position.y = explodedRatio * 42;
+      mpuGroup.position.y = explodedRatio * 42;
+
+      // Float ESP32 & Relay
+      esp32Group.position.y = explodedRatio * 32;
+      esp32Group.position.x = explodedRatio * 18;
+      relayGroup.position.y = explodedRatio * 25;
+      relayGroup.position.z = explodedRatio * 18;
+
+      // Sensors & Battery
+      sensorsGroup.position.y = explodedRatio * 20;
+      wiresGroup.position.y = explodedRatio * 25;
+
+      // Lower Mast & Ground Probe Downwards
+      mastGroup.position.y = -explodedRatio * 40;
+      groundGroup.position.y = -explodedRatio * 60;
+    }
+
+    /* =========================================================================
+       RENDER MODES & LAYERS
+       ========================================================================= */
+    function setRenderMode(mode) {
+      renderMode = mode;
+      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab-${mode}`).classList.add('active');
+      playBeep(650, 'sine', 0.08);
+
+      // Box body translucency in X-ray
+      materials.boxPlastic.transparent = (mode === 'xray');
+      materials.boxPlastic.opacity = (mode === 'xray') ? 0.28 : 1.0;
+      materials.aluminum.transparent = (mode === 'xray');
+      materials.aluminum.opacity = (mode === 'xray') ? 0.45 : 1.0;
+      materials.solarPanel.transparent = (mode === 'xray');
+      materials.solarPanel.opacity = (mode === 'xray') ? 0.18 : 1.0;
+
+      mainGroup.traverse(child => {
+        if (child.isMesh) {
+          if (mode === 'wire') {
+            child.material.wireframe = true;
+          } else {
+            child.material.wireframe = false;
+            if (child.material.name === 'boxLidSolid' || child.material.name === 'boxLidXray') {
+              child.material = (mode === 'xray') ? materials.boxLidXray : materials.boxLidSolid;
+            }
+          }
+        }
+      });
+    }
+
+    function toggleLayer(layerName, isVisible) {
+      playBeep(isVisible ? 750 : 450, 'sine', 0.06);
+      if (layerName === 'lid') lidGroup.visible = isVisible;
+      if (layerName === 'box') boxGroup.visible = isVisible;
+      if (layerName === 'wires') wiresGroup.visible = isVisible;
+      if (layerName === 'mast') {
+        mastGroup.visible = isVisible;
+        groundGroup.visible = isVisible;
+      }
+      if (layerName === 'dims') dimsGroup.visible = isVisible;
+    }
+
+    /* =========================================================================
+       CAMERA VIEW PRESETS
+       ========================================================================= */
+    function setCameraView(preset) {
+      playBeep(850, 'sine', 0.09);
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.preset-btn')).find(b => b.getAttribute('onclick').includes(preset));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      // Auto-hide lid in top view for direct breadboard inspection
+      if (preset === 'top') {
+        lidGroup.visible = false;
+        const lidToggle = document.getElementById('toggle-lid');
+        if (lidToggle) lidToggle.checked = false;
+      } else {
+        // Restore lid if returning to other views
+        lidGroup.visible = true;
+        const lidToggle = document.getElementById('toggle-lid');
+        if (lidToggle) lidToggle.checked = true;
+      }
+
+      const targetCam = {
+        iso: { pos: [160, 140, 200], look: [0, 15, 0] },
+        top: { pos: [-10, 180, -2], look: [-10, 12, -2] },
+        front: { pos: [0, 40, 250], look: [0, 30, 0] },
+        side: { pos: [-240, 50, 0], look: [-10, 30, 0] },
+        ground: { pos: [80, -100, 160], look: [0, -110, 0] }
+      }[preset];
+
+      if (targetCam) {
+        animateCameraTo(targetCam.pos, targetCam.look);
+      }
+    }
+
+    function animateCameraTo(targetPos, targetLook) {
+      const startPos = camera.position.clone();
+      const startLook = controls.target.clone();
+      const destPos = new THREE.Vector3(...targetPos);
+      const destLook = new THREE.Vector3(...targetLook);
+
+      const startTime = performance.now();
+      const duration = 600;
+
+      function tweenCam(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // cubic ease out
+
+        camera.position.lerpVectors(startPos, destPos, ease);
+        controls.target.lerpVectors(startLook, destLook, ease);
+        controls.update();
+
+        if (progress < 1) {
+          requestAnimationFrame(tweenCam);
+        }
+      }
+      requestAnimationFrame(tweenCam);
+    }
+
+    /* =========================================================================
+       UI POPULATION & INTERACTIVE SELECTION
+       ========================================================================= */
+    function populateComponentNav() {
+      const container = document.getElementById('comp-nav-list');
+      container.innerHTML = '';
+
+      COMPONENTS_DB.forEach(comp => {
+        const btn = document.createElement('div');
+        btn.className = 'comp-item-btn';
+        btn.id = `nav-${comp.id}`;
+        btn.innerHTML = `
+          <span>${comp.name}</span>
+          <span class="comp-tag">${comp.category}</span>
+        `;
+        btn.onclick = () => selectComponent(comp.id);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectComponent(id) {
+      playBeep(920, 'sine', 0.07);
+      const comp = COMPONENTS_DB.find(c => c.id === id);
+      if (!comp) return;
+
+      // Update Nav active styling
+      document.querySelectorAll('.comp-item-btn').forEach(b => b.classList.remove('selected'));
+      const activeBtn = document.getElementById(`nav-${id}`);
+      if (activeBtn) activeBtn.classList.add('selected');
+
+      // Update Detail Drawer
+      document.getElementById('detail-name').innerText = comp.name;
+      document.getElementById('detail-model').innerText = comp.model;
+      document.getElementById('detail-category').innerText = comp.category;
+      document.getElementById('detail-desc').innerText = comp.desc;
+      document.getElementById('detail-tip').innerText = comp.tip;
+      document.getElementById('detail-source').innerText = comp.source;
+
+      // Real Photo Handling
+      const photoImg = document.getElementById('detail-photo');
+      photoImg.src = comp.photo || '';
+
+      // Populate Pinout Table
+      const tbody = document.getElementById('pinout-tbody');
+      tbody.innerHTML = '';
+      comp.pinout.forEach(p => {
+        let badgeClass = 'pin-io';
+        if (p.pin.includes('3.3V') || p.pin.includes('VCC') || p.pin.includes('Daya')) badgeClass = 'pin-pwr';
+        if (p.pin.includes('GND')) badgeClass = 'pin-gnd';
+        if (p.pin.includes('SCK') || p.pin.includes('MOSI') || p.pin.includes('MISO') || p.pin.includes('NSS')) badgeClass = 'pin-spi';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="pin-badge ${badgeClass}">${p.pin}</span></td>
+          <td><strong>${p.target}</strong></td>
+          <td>${p.desc}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* =========================================================================
+       RAYCASTING & HOVER TOOLTIP
+       ========================================================================= */
+    const tooltip = document.getElementById('tooltip3d');
+    const tooltipText = document.getElementById('tooltip-text');
+    const tooltipSub = document.getElementById('tooltip-sub');
+
+    function onCanvasMouseMove(e) {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes, true);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        if (hit.userData && hit.userData.displayName) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = `${e.clientX}px`;
+          tooltip.style.top = `${e.clientY}px`;
+          tooltipText.innerText = hit.userData.displayName;
+          tooltipSub.innerText = hit.userData.subText || 'Klik untuk melihat pinout & detail';
+          document.body.style.cursor = 'pointer';
+          return;
+        }
+      }
+
+      tooltip.style.display = 'none';
+      document.body.style.cursor = 'default';
+    }
+
+    function onCanvasClick(e) {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(interactiveMeshes, true);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        if (hit.userData && hit.userData.compId) {
+          selectComponent(hit.userData.compId);
+        }
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // High Resolution Snapshot Export
+    function takeSnapshot() {
+      playBeep(1200, 'sine', 0.15);
+      renderer.render(scene, camera);
+      const dataUrl = renderer.domElement.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `TITEN_Node_Blueprint_3D_${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = dataUrl;
+      link.click();
+    }
+
+    /* =========================================================================
+       MAIN RENDER LOOP
+       ========================================================================= */
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+
+      // Subtle slow beacon breathing on Warning Strobe
+      const time = performance.now() * 0.002;
+      materials.ledYellow.emissiveIntensity = 0.35 + Math.sin(time * 3) * 0.25;
+
+      renderer.render(scene, camera);
+    }
+
+    // Initialize on Page Load
+    window.addEventListener('DOMContentLoaded', initThree);
+  </script>
+</body>
+</html>

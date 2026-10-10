@@ -2,445 +2,227 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
-import '../../../core/widgets/pin_modal.dart';
+import '../../../core/widgets/cache_status_footer.dart';
 import '../../dashboard/application/dashboard_providers.dart';
-import '../application/emergency_providers.dart';
+import '../../dashboard/data/models/alert_model.dart';
+import 'widgets/alert_row.dart';
+import 'widgets/relay_action_sheet.dart';
 
-class EmergencyScreen extends ConsumerWidget {
+/// Peringatan & EWS Command Screen conforming to 03_APP_FLUTTER_SPEC.md §8
+class EmergencyScreen extends ConsumerStatefulWidget {
   const EmergencyScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EmergencyScreen> createState() => _EmergencyScreenState();
+}
+
+class _EmergencyScreenState extends ConsumerState<EmergencyScreen> {
+  AlertLifecycle? _selectedFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.titenTokens;
     final alertsAsync = ref.watch(alertsProvider);
     final alerts = alertsAsync.value ?? [];
-    final activeAlert = alerts.where((a) => !a.resolved).firstOrNull;
-    final isSirenActive = ref.watch(sirenActiveStateProvider);
-    final isSirenTesting = ref.watch(sirenTestingInProgressProvider);
-    final emergencyController = ref.read(emergencyControllerProvider);
+
+    final filteredAlerts = alerts.where((a) {
+      if (_selectedFilter == null) return true;
+      return a.lifecycle == _selectedFilter;
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pusat Darurat & Sirine EWS', style: TitenTypography.titleLarge),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 800;
-
-            final heroWidget = activeAlert != null
-                ? _buildActiveThreatHero(context, activeAlert)
-                : _buildSafeHero();
-
-            final sirenCard = _buildSirenControlCard(
-              context,
-              ref,
-              isSirenActive,
-              isSirenTesting,
-              emergencyController,
-            );
-
-            final consensusCard = _buildConsensusInfoCard();
-            final evacuationCard = _buildEvacuationProtocolCard();
-            final hotlinesCard = _buildHotlinesCard(context);
-
-            if (isWide) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left Column: Alert Status & Siren Command
-                  Expanded(
-                    flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        heroWidget,
-                        const SizedBox(height: 20),
-                        sirenCard,
-                        const SizedBox(height: 20),
-                        hotlinesCard,
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  // Right Column: Multi-Node Consensus & Evacuation Protocols
-                  Expanded(
-                    flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        consensusCard,
-                        const SizedBox(height: 20),
-                        evacuationCard,
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            // Mobile Single Column
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                heroWidget,
-                const SizedBox(height: 20),
-                sirenCard,
-                const SizedBox(height: 20),
-                consensusCard,
-                const SizedBox(height: 20),
-                evacuationCard,
-                const SizedBox(height: 20),
-                hotlinesCard,
-                const SizedBox(height: 30),
-              ],
-            );
-          },
+        title: Text(
+          'Pusat Peringatan & Sirine EWS',
+          style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 18),
         ),
       ),
-    );
-  }
-
-  Widget _buildActiveThreatHero(BuildContext context, dynamic alert) {
-    final isKarhutla = alert.hazardType == 2;
-    final color = isKarhutla ? TitenColors.statusAwasKarhutla : TitenColors.statusAwasLongsor;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color, width: 2),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(alertsProvider);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.warning_rounded, color: Colors.white, size: 24),
+              // 1. Confirmed Hardware Siren Actuation Card
+              const RelayControlCard(
+                nodeId: 1,
+                nodeName: 'Node 01 (Sirine Utama)',
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      alert.title,
-                      style: TitenTypography.titleLarge.copyWith(color: color, fontSize: 16),
+
+              const SizedBox(height: 20),
+
+              // 2. Alert Lifecycle Filter Chips
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'LOG PERINGATAN BENCANA',
+                    style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      fontSize: 12,
                     ),
-                    Text(
-                      'STATUS AWAS TINGKAT 3 — VALIDASI MULTI-NODE',
-                      style: TitenTypography.dataLabel.copyWith(color: color, fontSize: 10),
+                  ),
+                  Text(
+                    '${filteredAlerts.length} Kejadian',
+                    style: TitenTypography.technical(color: tokens.textMetadata).copyWith(fontSize: 11),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    FilterChip(
+                      selected: _selectedFilter == null,
+                      label: Text('Semua (${alerts.length})'),
+                      onSelected: (_) => setState(() => _selectedFilter = null),
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      selected: _selectedFilter == AlertLifecycle.open,
+                      label: Text(
+                        'Aktif (${alerts.where((a) => a.lifecycle == AlertLifecycle.open).length})',
+                      ),
+                      onSelected: (selected) {
+                        setState(() => _selectedFilter = selected ? AlertLifecycle.open : null);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      selected: _selectedFilter == AlertLifecycle.acknowledged,
+                      label: Text(
+                        'Diakui (${alerts.where((a) => a.lifecycle == AlertLifecycle.acknowledged).length})',
+                      ),
+                      onSelected: (selected) {
+                        setState(() => _selectedFilter = selected ? AlertLifecycle.acknowledged : null);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      selected: _selectedFilter == AlertLifecycle.resolved,
+                      label: Text(
+                        'Selesai (${alerts.where((a) => a.lifecycle == AlertLifecycle.resolved).length})',
+                      ),
+                      onSelected: (selected) {
+                        setState(() => _selectedFilter = selected ? AlertLifecycle.resolved : null);
+                      },
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(alert.description, style: TitenTypography.bodyMedium),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(backgroundColor: color),
-                  icon: const Icon(Icons.campaign),
-                  label: const Text('Broadcast Evakuasi Warga'),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Pesan Evakuasi Darurat Disiarkan via FCM & SMS!')),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSafeHero() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.statusAman.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TitenColors.statusAman),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: TitenColors.statusAman,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.verified_user_rounded, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Sistem Siaga Normal', style: TitenTypography.titleLarge.copyWith(color: TitenColors.statusAman)),
-                Text(
-                  'Tidak ada ancaman aktif yang tervalidasi oleh Multi-Node Consensus.',
-                  style: TitenTypography.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+              const SizedBox(height: 14),
 
-  Widget _buildSirenControlCard(
-    BuildContext context,
-    WidgetRef ref,
-    bool isSirenActive,
-    bool isSirenTesting,
-    EmergencyController controller,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isSirenActive ? TitenColors.statusAwasLongsor : TitenColors.outlineBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.volume_up_rounded,
-                    color: isSirenActive ? TitenColors.statusAwasLongsor : TitenColors.textMain,
+              // 3. Alerts List
+              if (alertsAsync.isLoading)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(height: 10),
+                        Text('Memeriksa riwayat peringatan...', style: TitenTypography.metadata(color: tokens.textMetadata)),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Text('Uji Sirine Lapangan (120dB)', style: TitenTypography.titleLarge.copyWith(fontSize: 15)),
-                ],
-              ),
+                )
+              else if (filteredAlerts.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: tokens.surfacePanel,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: tokens.borderSubtle),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 36, color: tokens.normal.fg),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Belum Ada Alert Terverifikasi',
+                        style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 15),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Tidak ada insiden bahaya pada filter ini. Sistem memantau ambang telemetri secara berkelanjutan.',
+                        style: TitenTypography.body(color: tokens.textSecondary).copyWith(fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ...filteredAlerts.map(
+                  (alert) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: AlertItemCard(alert: alert),
+                  ),
+                ),
+
+              const SizedBox(height: 20),
+
+              // 4. Protokol Evakuasi & Hotline
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isSirenActive ? TitenColors.statusAwasLongsor.withOpacity(0.12) : TitenColors.surfaceSubtle,
-                  borderRadius: BorderRadius.circular(6),
+                  color: tokens.surfacePanel,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: tokens.borderSubtle),
                 ),
-                child: Text(
-                  isSirenActive ? 'SIRINE AKTIF' : 'STANDBY',
-                  style: TextStyle(
-                    color: isSirenActive ? TitenColors.statusAwasLongsor : TitenColors.textMuted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PANDUAN & PROTOKOL EVAKUASI WARGA',
+                      style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(height: 1),
+                    const SizedBox(height: 8),
+                    _protoItem('1. Status Awas', 'Bunyikan sirine 120dB & arahkan warga ke titik kumpul aman.'),
+                    _protoItem('2. Cek Jalur', 'Hindari area lembah sempit dan tebing berlereng > 20°.'),
+                    _protoItem('3. Hubungi BPBD', 'Pusdalops BPBD: 112 / Tim Tanggap Bencana Lokal.'),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Khusus teknisi lapangan & operator BPBD. Memerlukan verifikasi PIN 4-digit untuk menghindari kepanikan warga (US-05).',
-            style: TitenTypography.bodySmall,
-          ),
-          const SizedBox(height: 16),
-          if (isSirenActive)
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(backgroundColor: TitenColors.textMain),
-                    icon: const Icon(Icons.volume_off),
-                    label: const Text('Matikan Sirine'),
-                    onPressed: () {
-                      controller.stopSiren();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Command LoRa SIREN_OFF terkirim ke Edge Node.')),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: isSirenTesting
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.lock_clock),
-                    label: const Text('Mulai Uji Sirine (Wajib PIN)'),
-                    onPressed: isSirenTesting
-                        ? null
-                        : () async {
-                            final verified = await showPinModal(context);
-                            if (verified) {
-                              final success = await controller.testSiren('1234');
-                              if (success && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    backgroundColor: TitenColors.statusAwasLongsor,
-                                    content: Text('Sirine 120dB & LED Strobe berhasil diaktifkan untuk pengujian!'),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildConsensusInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TitenColors.outlineBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.hub_outlined, color: TitenColors.tacticalCyan, size: 18),
-              const SizedBox(width: 8),
-              Text('Multi-Node Consensus Engine', style: TitenTypography.titleLarge.copyWith(fontSize: 15)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Mencegah alarm palsu akibat hewan atau angin sesaat. Status AWAS hanya diaktifkan jika minimal 2 dari 3 node sensor dalam radius 100m mengonfirmasi ancaman yang sama dalam rentang waktu 10 detik.',
-            style: TitenTypography.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: TitenColors.surfaceSubtle,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _consStep('Node Sampling', 'ESP32 Fusion', Icons.sensors),
-                const Icon(Icons.arrow_forward, size: 14, color: TitenColors.textMuted),
-                _consStep('LoRa Transmit', '16-Byte Bitmask', Icons.radio),
-                const Icon(Icons.arrow_forward, size: 14, color: TitenColors.textMuted),
-                _consStep('Consensus 2/3', 'Verified Alert', Icons.verified),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _consStep(String title, String sub, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, size: 16, color: TitenColors.tacticalCyan),
-        const SizedBox(height: 2),
-        Text(title, style: TitenTypography.dataLabel.copyWith(fontSize: 9)),
-        Text(sub, style: TitenTypography.bodySmall.copyWith(fontSize: 8.5, color: TitenColors.textMuted)),
-      ],
-    );
-  }
-
-  Widget _buildEvacuationProtocolCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TitenColors.outlineBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Protokol Evakuasi Cepat Warga', style: TitenTypography.titleLarge.copyWith(fontSize: 15)),
-          const SizedBox(height: 10),
-          _protocolItem('1', 'Tanah Longsor', 'Jauhi tebing dan lereng curam, evakuasi segera menuju Posko Balai Desa.'),
-          const SizedBox(height: 8),
-          _protocolItem('2', 'Kebakaran Hutan', 'Gunakan masker basah, hindari jalur asap tebal, dan kumpul di Lapangan Terbuka.'),
-          const SizedBox(height: 8),
-          _protocolItem('3', 'Koordinasi Petugas', 'Ikuti arahan Tim SAR dan BPBD melalui sirine dan notifikasi aplikasi.'),
-        ],
-      ),
-    );
-  }
-
-  Widget _protocolItem(String num, String title, String desc) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 10,
-          backgroundColor: TitenColors.primaryAccent.withOpacity(0.12),
-          child: Text(num, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: TitenColors.primaryAccent)),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TitenTypography.bodyLarge.copyWith(fontSize: 13, fontWeight: FontWeight.w600)),
-              Text(desc, style: TitenTypography.bodySmall),
+              const SizedBox(height: 20),
+              const CacheStatusFooter(),
+              const SizedBox(height: 24),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildHotlinesCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TitenColors.outlineBorder),
-      ),
-      child: Column(
+  Widget _protoItem(String num, String desc) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Kontak Darurat Terintegrasi', style: TitenTypography.titleLarge.copyWith(fontSize: 15)),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _hotlineBtn('BPBD Center', '112 / 021-123456')),
-              const SizedBox(width: 10),
-              Expanded(child: _hotlineBtn('Basarnas / SAR', '115')),
-            ],
-          ),
+          Text(num, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(desc, style: const TextStyle(fontSize: 13))),
         ],
       ),
-    );
-  }
-
-  Widget _hotlineBtn(String label, String number) {
-    return OutlinedButton.icon(
-      icon: const Icon(Icons.phone, size: 14),
-      label: Text('$label ($number)', style: const TextStyle(fontSize: 11)),
-      onPressed: () {},
     );
   }
 }

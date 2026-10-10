@@ -22,6 +22,7 @@ class DefaultFirebaseOptions {
     appId: '1:990164300071:web:277b449ff217852648f902',
     messagingSenderId: '990164300071',
     projectId: 'titen-2f970',
+    databaseURL: 'https://titen-2f970-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'titen-2f970.firebasestorage.app',
   );
 
@@ -30,6 +31,7 @@ class DefaultFirebaseOptions {
     appId: '1:990164300071:android:277b449ff217852648f902',
     messagingSenderId: '990164300071',
     projectId: 'titen-2f970',
+    databaseURL: 'https://titen-2f970-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'titen-2f970.firebasestorage.app',
   );
 }

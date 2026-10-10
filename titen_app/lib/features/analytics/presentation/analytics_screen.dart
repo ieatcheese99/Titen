@@ -12,6 +12,7 @@ class AnalyticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.titenTokens;
     final nodesAsync = ref.watch(allNodesProvider);
     final nodes = nodesAsync.value ?? [];
     final selectedNodeId = ref.watch(selectedNodeIdForAnalyticsProvider);
@@ -21,7 +22,10 @@ class AnalyticsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Analytics & Tren Bencana', style: TitenTypography.titleLarge),
+        title: Text(
+          'Analitik & Tren Telemetri',
+          style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -29,7 +33,14 @@ class AnalyticsScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. Node Selector Row
-            Text('PILIH TITIK SENSOR (NODE):', style: TitenTypography.dataLabel),
+            Text(
+              'PILIH TITIK SENSOR (NODE):',
+              style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                fontSize: 12,
+              ),
+            ),
             const SizedBox(height: 8),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -41,15 +52,15 @@ class AnalyticsScreen extends ConsumerWidget {
                     child: ChoiceChip(
                       label: Text(node.name),
                       selected: isSelected,
-                      selectedColor: TitenColors.primaryAccent,
-                      backgroundColor: TitenColors.surfaceWhite,
+                      selectedColor: tokens.actionPrimaryBg,
+                      backgroundColor: tokens.surfacePanel,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : TitenColors.textMain,
+                        color: isSelected ? tokens.actionPrimaryFg : tokens.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
                       side: BorderSide(
-                        color: isSelected ? TitenColors.primaryAccent : TitenColors.outlineBorder,
+                        color: isSelected ? tokens.actionPrimaryBg : tokens.borderControl,
                       ),
                       onSelected: (selected) {
                         if (selected) {
@@ -67,202 +78,155 @@ class AnalyticsScreen extends ConsumerWidget {
             // 2. Metric Selector Tabs
             Container(
               decoration: BoxDecoration(
-                color: TitenColors.surfaceSubtle,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: TitenColors.outlineBorder),
+                color: tokens.surfaceSubtle,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: tokens.borderSubtle),
               ),
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
-                  _metricTab(ref, 'Tanah %', AnalyticsMetric.soilMoisture, selectedMetric),
-                  _metricTab(ref, 'Suhu °C', AnalyticsMetric.airTemp, selectedMetric),
-                  _metricTab(ref, 'Kemiringan °', AnalyticsMetric.tiltAngle, selectedMetric),
-                  _metricTab(ref, 'Udara %', AnalyticsMetric.airHumidity, selectedMetric),
+                  _metricTab(tokens, ref, 'Tanah %', AnalyticsMetric.soilMoisture, selectedMetric),
+                  _metricTab(tokens, ref, 'Suhu °C', AnalyticsMetric.airTemp, selectedMetric),
+                  _metricTab(tokens, ref, 'Kemiringan °', AnalyticsMetric.tiltAngle, selectedMetric),
+                  _metricTab(tokens, ref, 'Udara %', AnalyticsMetric.airHumidity, selectedMetric),
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            // 3, 4, 5. Main Chart Card and Statistics / Assessment
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 850;
-
-                final chartCard = Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: TitenColors.surfaceWhite,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: TitenColors.outlineBorder),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            // 3. Main Chart Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: tokens.surfacePanel,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: tokens.borderSubtle),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(selectedMetric.title, style: TitenTypography.titleLarge),
-                              Text('Tren Riwayat Telemetri (7 Hari Terakhir)', style: TitenTypography.bodySmall),
-                            ],
+                          Text(
+                            selectedMetric.title,
+                            style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 15),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: TitenColors.baseBackground,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: TitenColors.outlineBorder),
-                            ),
-                            child: Text(
-                              '${stats.current} ${selectedMetric.unit}',
-                              style: TitenTypography.dataValue.copyWith(
-                                color: TitenColors.primaryAccent,
-                                fontSize: 16,
-                              ),
-                            ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Histori pengamatan 7 hari terakhir',
+                            style: TitenTypography.metadata(color: tokens.textMetadata).copyWith(fontSize: 11),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        height: isWide ? 300 : 220,
-                        child: historyAsync.when(
-                          data: (history) {
-                            if (history.isEmpty) {
-                              return const Center(child: Text('Tidak ada data riwayat.'));
-                            }
-                            return _buildLineChart(history, selectedMetric);
-                          },
-                          loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (_, __) => const Center(child: Text('Gagal memuat data grafik')),
+                      Text(
+                        '${stats.current} ${selectedMetric.unit}',
+                        style: TitenTypography.value(color: tokens.actionPrimaryBg).copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
                   ),
-                );
-
-                final statsGrid = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('RINGKASAN STATISTIK (7 HARI):', style: TitenTypography.dataLabel),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(child: _statCard('TERENDAH', '${stats.min} ${selectedMetric.unit}', Icons.arrow_downward, TitenColors.tacticalCyan)),
-                        const SizedBox(width: 10),
-                        Expanded(child: _statCard('RATA-RATA', '${stats.avg} ${selectedMetric.unit}', Icons.functions, TitenColors.primaryAccent)),
-                        const SizedBox(width: 10),
-                        Expanded(child: _statCard('TERTINGGI', '${stats.max} ${selectedMetric.unit}', Icons.arrow_upward, TitenColors.statusSiaga)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Risk Assessment Recommendation Box
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: TitenColors.surfaceWhite,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: TitenColors.outlineBorder),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: TitenColors.primaryAccent.withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 220,
+                    child: historyAsync.when(
+                      data: (history) {
+                        if (history.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'Belum ada data historis.',
+                              style: TitenTypography.metadata(color: tokens.textMetadata),
                             ),
-                            child: const Icon(Icons.shield_outlined, color: TitenColors.primaryAccent, size: 24),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Analisis Risiko Lereng & Iklim', style: TitenTypography.titleLarge.copyWith(fontSize: 14)),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Fluktuasi harian dalam ambang batas normal. Tidak ada pergeseran tanah signifikan atau lonjakan suhu ekstrem terdeteksi.',
-                                  style: TitenTypography.bodySmall.copyWith(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                          );
+                        }
+                        return _buildLineChart(tokens, history, selectedMetric);
+                      },
+                      loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      error: (err, _) => Center(child: Text('Error: $err')),
                     ),
-                  ],
-                );
-
-                if (isWide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 6, child: chartCard),
-                      const SizedBox(width: 16),
-                      Expanded(flex: 4, child: statsGrid),
-                    ],
-                  );
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    chartCard,
-                    const SizedBox(height: 20),
-                    statsGrid,
-                  ],
-                );
-              },
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 16),
+
+            // 4. Statistics Summary Grid
+            Row(
+              children: [
+                Expanded(
+                  child: _statCard(
+                    tokens,
+                    'TERENDAH (MIN)',
+                    '${stats.min} ${selectedMetric.unit}',
+                    Icons.arrow_downward,
+                    tokens.syncing.fg,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _statCard(
+                    tokens,
+                    'TERTINGGI (MAX)',
+                    '${stats.max} ${selectedMetric.unit}',
+                    Icons.arrow_upward,
+                    tokens.critical.fg,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _statCard(
+                    tokens,
+                    'RATA-RATA',
+                    '${stats.avg} ${selectedMetric.unit}',
+                    Icons.calculate_outlined,
+                    tokens.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _metricTab(WidgetRef ref, String label, AnalyticsMetric metric, AnalyticsMetric active) {
-    final isSelected = metric == active;
+  Widget _metricTab(
+    TitenTokens tokens,
+    WidgetRef ref,
+    String label,
+    AnalyticsMetric metric,
+    AnalyticsMetric selected,
+  ) {
+    final isSelected = metric == selected;
     return Expanded(
-      child: GestureDetector(
+      child: InkWell(
         onTap: () {
           ref.read(selectedMetricProvider.notifier).state = metric;
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? TitenColors.surfaceWhite : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
+            color: isSelected ? tokens.surfacePanel : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: isSelected ? Border.all(color: tokens.borderSubtle) : null,
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? TitenColors.textMain : TitenColors.textMuted,
+                color: isSelected ? tokens.textPrimary : tokens.textMetadata,
               ),
             ),
           ),
@@ -271,26 +235,32 @@ class AnalyticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLineChart(List<dynamic> history, AnalyticsMetric metric) {
+  Widget _buildLineChart(TitenTokens tokens, List<dynamic> history, AnalyticsMetric metric) {
     final spots = <FlSpot>[];
     for (int i = 0; i < history.length; i++) {
       final item = history[i];
       double val = 0;
       switch (metric) {
         case AnalyticsMetric.soilMoisture:
-          val = item.soilMoisturePct;
+          val = (item.soilMoisturePct as num?)?.toDouble() ?? 0;
           break;
         case AnalyticsMetric.airTemp:
-          val = item.airTempC;
+          val = (item.airTempC as num?)?.toDouble() ?? 0;
           break;
         case AnalyticsMetric.tiltAngle:
-          val = item.tiltDeg;
+          val = (item.tiltDeg as num?)?.toDouble() ?? 0;
           break;
         case AnalyticsMetric.airHumidity:
-          val = item.airHumidityPct;
+          val = (item.airHumidityPct as num?)?.toDouble() ?? 0;
           break;
       }
       spots.add(FlSpot(i.toDouble(), val));
+    }
+
+    if (spots.isEmpty) {
+      return Center(
+        child: Text('Tidak ada sampel numerik valid.', style: TextStyle(color: tokens.textMetadata)),
+      );
     }
 
     return LineChart(
@@ -299,8 +269,8 @@ class AnalyticsScreen extends ConsumerWidget {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: 10,
-          getDrawingHorizontalLine: (value) => const FlLine(
-            color: TitenColors.outlineBorder,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: tokens.borderSubtle,
             strokeWidth: 1,
           ),
         ),
@@ -316,11 +286,13 @@ class AnalyticsScreen extends ConsumerWidget {
               getTitlesWidget: (value, meta) {
                 final idx = value.toInt();
                 if (idx >= 0 && idx < history.length) {
-                  final time = history[idx].timestamp as DateTime;
-                  return Text(
-                    DateFormat('d MMM').format(time),
-                    style: TitenTypography.dataLabel.copyWith(fontSize: 9),
-                  );
+                  final time = history[idx].timestamp as DateTime?;
+                  if (time != null) {
+                    return Text(
+                      DateFormat('d MMM').format(time),
+                      style: TitenTypography.technical(color: tokens.textMetadata).copyWith(fontSize: 10),
+                    );
+                  }
                 }
                 return const Text('');
               },
@@ -331,28 +303,33 @@ class AnalyticsScreen extends ConsumerWidget {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
-            isCurved: true,
-            color: TitenColors.primaryAccent,
-            barWidth: 2.5,
+            isCurved: false, // Strict: no synthetic smoothing
+            color: tokens.syncing.fg,
+            barWidth: 2.0,
             isStrokeCapRound: true,
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              color: TitenColors.primaryAccent.withOpacity(0.1),
+            dotData: FlDotData(
+              show: spots.length <= 15,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 2.5,
+                color: tokens.syncing.fg,
+                strokeWidth: 1,
+                strokeColor: tokens.surfacePanel,
+              ),
             ),
+            belowBarData: BarAreaData(show: false),
           ),
         ],
       ),
     );
   }
 
-  Widget _statCard(String label, String value, IconData icon, Color color) {
+  Widget _statCard(TitenTokens tokens, String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: TitenColors.outlineBorder),
+        color: tokens.surfacePanel,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: tokens.borderSubtle),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,12 +337,21 @@ class AnalyticsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: TitenTypography.dataLabel.copyWith(fontSize: 9)),
+              Text(
+                label,
+                style: TitenTypography.technical(color: tokens.textMetadata).copyWith(fontSize: 9.5),
+              ),
               Icon(icon, size: 14, color: color),
             ],
           ),
           const SizedBox(height: 6),
-          Text(value, style: TitenTypography.dataValue.copyWith(fontSize: 16)),
+          Text(
+            value,
+            style: TitenTypography.technical(color: tokens.textPrimary).copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

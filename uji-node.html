@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TITEN · Uji sensor USB</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #18181b; background: #f4f4f5; }
+    * { box-sizing: border-box; } body { margin: 0; } main { max-width: 1040px; margin: auto; padding: 32px 20px; }
+    .eyebrow { font: 700 12px ui-monospace, monospace; letter-spacing: .12em; color: #52525b; }
+    h1 { font-size: clamp(26px, 5vw, 38px); margin: 10px 0; } h2 { font-size: 18px; margin: 0 0 12px; }
+    p { line-height: 1.65; } .muted { color: #52525b; } .panel { background: white; border: 1px solid #d4d4d8; border-radius: 10px; padding: 20px; margin-top: 20px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; } button { min-height: 48px; padding: 10px 18px; border-radius: 8px; border: 1px solid #a1a1aa; font: inherit; font-weight: 600; cursor: pointer; background: white; color: #18181b; }
+    button.primary { background: #18181b; color: white; border-color: #18181b; } button:disabled { opacity: .55; cursor: default; } :focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+    .badge { display: inline-block; padding: 6px 10px; border-radius: 6px; background: #e4e4e7; font-size: 14px; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+    .metric { margin: 0; min-height: 130px; } .value { display: block; font: 600 28px ui-monospace, monospace; margin: 12px 0 6px; }
+    .metric small { color: #52525b; } .checks { display: flex; flex-wrap: wrap; gap: 8px 24px; } .checks label { display: flex; gap: 10px; align-items: center; min-height: 48px; } input { width: 20px; height: 20px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.6 ui-monospace, monospace; background: #f4f4f5; padding: 12px; border-radius: 6px; max-height: 260px; overflow: auto; }
+    .warning { border-left: 4px solid #a16207; } a { color: #1d4ed8; } #message { min-height: 24px; } @media(min-width: 800px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  </style>
+  <script src="uji-node.js" defer></script>
+</head>
+<body><main>
+  <div class="eyebrow">TITEN / PENGUJIAN PERANGKAT</div>
+  <h1>Lihat sensor asli lewat USB.</h1>
+  <p class="muted">Upload <strong>node_bench.ino</strong>, tutup Serial Monitor Arduino, lalu pilih port ESP32. Sampel diperbarui sekitar setiap 2,5 detik.</p>
+  <section class="panel">
+    <span id="connection" class="badge" role="status">Belum terhubung</span>
+    <div class="actions"><button id="connect" class="primary">Hubungkan ESP32</button><button id="disconnect" disabled>Putuskan koneksi</button></div>
+    <p id="message" role="status">Buka di Chrome/Edge melalui localhost. Sensor boleh dipasang bertahap.</p>
+    <small id="freshness">Belum ada sampel dari node.</small>
+  </section>
+  <section class="grid" aria-label="Pembacaan sensor">
+    <article class="panel metric"><span>Kemiringan MPU6050</span><strong id="tilt" class="value">—</strong><small id="mpu-state">Menunggu data</small></article>
+    <article class="panel metric"><span>Suhu DHT22</span><strong id="temp" class="value">—</strong><small id="dht-state">Menunggu data</small></article>
+    <article class="panel metric"><span>Kelembapan udara</span><strong id="humidity" class="value">—</strong><small>Dari DHT22, bukan kelembapan tanah</small></article>
+    <article class="panel metric"><span>Tanah · ADC mentah</span><strong id="soil" class="value">—</strong><small id="soil-state">Belum diaktifkan; perlu kalibrasi sebelum menjadi %</small></article>
+    <article class="panel metric"><span>Sensor flame</span><strong id="flame" class="value">—</strong><small id="flame-state">Belum diaktifkan; asumsi DO aktif LOW</small></article>
+    <article class="panel metric"><span>Sampel diterima</span><strong id="count" class="value">0</strong><small id="sequence">Belum ada paket</small></article>
+    <article class="panel metric"><span>Baterai</span><strong class="value">—</strong><small>Belum diuji pada tahap USB</small></article>
+    <article class="panel metric"><span>Buzzer & LED</span><strong class="value">—</strong><small>Belum dipasang / belum diuji</small></article>
+  </section>
+  <section class="panel">
+    <h2>Sensor yang dipasang</h2>
+    <p class="muted">Centang soil/flame hanya setelah kabelnya terpasang. Input kosong bisa menghasilkan angka acak. Matikan USB sebelum mengubah wiring, lalu hubungkan kembali dan centang ulang.</p>
+    <div class="checks">
+      <label><input id="mpu-enabled" type="checkbox" checked disabled>MPU6050 · SDA 8 / SCL 9</label>
+      <label><input id="dht-enabled" type="checkbox" checked disabled>DHT22 · DATA 2</label>
+      <label><input id="soil-enabled" type="checkbox" disabled>Soil · AOUT 1</label>
+      <label><input id="flame-enabled" type="checkbox" disabled>Flame · DO 3</label>
+    </div>
+  </section>
+  <section class="panel warning"><h2>Yang dibuktikan tahap ini</h2><p>Pembacaan node melalui USB. LoRa, penerimaan gateway, cloud, dan alarm fisik belum diuji. Tampilan ini tidak menyatakan lokasi AMAN atau menyalakan sirine.</p></section>
+  <section class="panel"><h2>Log perangkat</h2><pre id="log">Menunggu koneksi…</pre><button id="export" disabled>Unduh sampel JSON</button></section>
+  <p class="muted">Panduan: <a href="docs/PANDUAN_UJI_SENSOR_DAN_WEB.md">uji sensor → LoRa → gateway → web utama</a>.</p>
+</main></body></html>

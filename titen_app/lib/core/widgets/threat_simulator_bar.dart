@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/dashboard/application/simulation_controller.dart';
+import '../../features/dashboard/application/dashboard_providers.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_typography.dart';
 
@@ -9,16 +10,21 @@ class ThreatSimulatorBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(dataSourceModeProvider);
     final activeMode = ref.watch(activeSimulationModeProvider);
     final controller = ref.read(simulationControllerProvider);
+    final tokens = context.titenTokens;
+
+    // Only active in DEMO mode per 03_APP_FLUTTER_SPEC.md §3.1 & §10
+    if (!mode.isDemo) {
+      return const SizedBox.shrink();
+    }
 
     final modes = [
-      {'key': 'aman', 'label': '🟢 Aman', 'color': TitenColors.statusAman},
-      {'key': 'waspada_longsor', 'label': '🟡 Waspada Longsor', 'color': TitenColors.statusWaspada},
-      {'key': 'waspada_karhutla', 'label': '🟧 Waspada Karhutla', 'color': TitenColors.statusSiaga},
-      {'key': 'siaga', 'label': '🔔 Siaga', 'color': TitenColors.statusSiaga},
-      {'key': 'awas_longsor', 'label': '🚨 AWAS LONGSOR', 'color': TitenColors.statusAwasLongsor},
-      {'key': 'awas_karhutla', 'label': '🔥 AWAS KARHUTLA', 'color': TitenColors.statusAwasKarhutla},
+      {'key': 'aman', 'label': '🟢 Aman', 'color': tokens.normal.fg},
+      {'key': 'waspada_longsor', 'label': '🟡 Waspada Longsor', 'color': tokens.warning.fg},
+      {'key': 'awas_longsor', 'label': '🔴 AWAS LONGSOR', 'color': tokens.critical.fg},
+      {'key': 'awas_karhutla', 'label': '🔥 AWAS KARHUTLA', 'color': tokens.critical.fg},
     ];
 
     return Container(
@@ -30,11 +36,11 @@ class ThreatSimulatorBar extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Row(
               children: [
-                const Icon(Icons.science_outlined, size: 14, color: TitenColors.textMuted),
+                Icon(Icons.science_outlined, size: 14, color: tokens.textMetadata),
                 const SizedBox(width: 6),
                 Text(
-                  'SIMULASI BENCANA (MAGE 12 DEMO CONTROLLER):',
-                  style: TitenTypography.dataLabel.copyWith(
+                  'KONTROL SIMULATOR BAHAYA (DEMO LOMBA):',
+                  style: TitenTypography.technical(color: tokens.textMetadata).copyWith(
                     fontSize: 10,
                     letterSpacing: 0.5,
                   ),
@@ -53,38 +59,25 @@ class ThreatSimulatorBar extends ConsumerWidget {
 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => controller.setMode(m['key'] as String),
-                      borderRadius: BorderRadius.circular(20),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected ? color : TitenColors.surfaceWhite,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected ? color : TitenColors.outlineBorder,
-                            width: isSelected ? 1.5 : 1,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: color.withOpacity(0.3),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : null,
+                  child: InkWell(
+                    onTap: () => controller.setMode(m['key'] as String),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? color : tokens.surfacePanel,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isSelected ? color : tokens.borderSubtle,
+                          width: 1,
                         ),
-                        child: Text(
-                          m['label'] as String,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? Colors.white : TitenColors.textMain,
-                          ),
+                      ),
+                      child: Text(
+                        m['label'] as String,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? Colors.white : tokens.textPrimary,
                         ),
                       ),
                     ),

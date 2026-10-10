@@ -2,284 +2,128 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
-import '../../dashboard/data/models/user_profile.dart';
-import '../application/settings_providers.dart';
+import '../../../core/widgets/cache_status_footer.dart';
+import 'widgets/field_diagnostics_card.dart';
+import 'widgets/preferences_group.dart';
 
+/// Alat & Pengaturan Screen conforming to 03_APP_FLUTTER_SPEC.md §4.1 & §7
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProfileProvider);
-    final gateway = ref.watch(loraGatewayStatusProvider);
+    final tokens = context.titenTokens;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pengaturan & Konfigurasi', style: TitenTypography.titleLarge),
+        title: Text(
+          'Alat Lapangan & Pengaturan',
+          style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 18),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 800;
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. M21 Field Diagnostics Checklist
+            const FieldDiagnosticsCard(),
 
-            final profileCard = _buildProfileCard(context, ref, user);
-            final gatewayCard = _buildGatewayCard(gateway);
-            final notificationCard = _buildNotificationCard();
-            final aboutCard = _buildAboutCard();
+            const SizedBox(height: 16),
 
-            if (isWide) {
-              return Row(
+            // 2. M24 Preferences Group (ThemeMode, Haptics, Notifications)
+            const PreferencesGroupCard(),
+
+            const SizedBox(height: 16),
+
+            // 3. Provisioning Wizard Card (With Capability Gate per §7.1)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: tokens.surfacePanel,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: tokens.borderSubtle, width: 1),
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        profileCard,
-                        const SizedBox(height: 20),
-                        gatewayCard,
-                      ],
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.bluetooth_searching, size: 20, color: tokens.textSecondary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'COMMISSIONING & WIZARD BLE',
+                        style: TitenTypography.technical(color: tokens.textSecondary).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    flex: 5,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        notificationCard,
-                        const SizedBox(height: 20),
-                        aboutCard,
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Pemasangan Gateway Baru (ESP32 BLE / SoftAP)',
+                    style: TitenTypography.sectionTitle(color: tokens.textPrimary).copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fitur commissioning nirkabel membutuhkan build firmware gateway ESP32-S3 dengan modul Espressif Unified Provisioning aktif. Gateway saat ini beroperasi pada mode stasiun radio LoRa mandiri.',
+                    style: TitenTypography.body(color: tokens.textSecondary).copyWith(fontSize: 13),
+                  ),
+                  const SizedBox(height: 14),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.qr_code_scanner, size: 18),
+                    label: const Text('Scan QR / Mulai Wizard (Belum Didukung Firmware)'),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Firmware gateway saat ini belum mengumumkan GATT provisioning.'),
+                        ),
+                      );
+                    },
                   ),
                 ],
-              );
-            }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                profileCard,
-                const SizedBox(height: 20),
-                gatewayCard,
-                const SizedBox(height: 20),
-                notificationCard,
-                const SizedBox(height: 20),
-                aboutCard,
-                const SizedBox(height: 30),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileCard(BuildContext context, WidgetRef ref, dynamic user) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TitenColors.outlineBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: TitenColors.primaryAccent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(Icons.person, color: TitenColors.primaryAccent, size: 26),
-                ),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(user.name, style: TitenTypography.titleLarge.copyWith(fontSize: 16)),
-                    Text(user.location ?? 'Lokasi Wilayah Binaan', style: TitenTypography.bodySmall),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(),
-          const SizedBox(height: 12),
-          Text('PILIH PERAN PENGGUNA (ROLE):', style: TitenTypography.dataLabel),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<UserRole>(
-            initialValue: user.role,
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
-            items: UserRole.values.map((role) {
-              return DropdownMenuItem(
-                value: role,
-                child: Text(role.displayName, style: TitenTypography.bodyMedium),
-              );
-            }).toList(),
-            onChanged: (newRole) {
-              if (newRole != null) {
-                ref.read(userProfileProvider.notifier).state = UserProfile(
-                  uid: user.uid,
-                  name: user.name,
-                  role: newRole,
-                  phone: user.phone,
-                  location: user.location,
-                );
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildGatewayCard(dynamic gateway) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('STATUS HARDWARE IOT GATEWAY:', style: TitenTypography.dataLabel),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: TitenColors.surfaceWhite,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: TitenColors.outlineBorder),
-          ),
-          child: Column(
-            children: [
-              _infoRow('Status Gateway', gateway['status'] as String, isGreen: true),
-              const Divider(height: 18),
-              _infoRow('Nama Jaringan Gateway', gateway['ssid'] as String),
-              const Divider(height: 18),
-              _infoRow('Frekuensi LoRa', gateway['frequency'] as String),
-              const Divider(height: 18),
-              _infoRow('Kekuatan Sinyal (RSSI)', gateway['rssi'] as String),
-              const Divider(height: 18),
-              _infoRow('Node Sensor Terhubung', '${gateway['nodesConnected']} Unit (Node 01 - 04)'),
-              const Divider(height: 18),
-              _infoRow('Sinkronisasi Cloud', gateway['syncInterval'] as String),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+            const SizedBox(height: 16),
 
-  Widget _buildNotificationCard() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('PENGATURAN NOTIFIKASI PUSH (FCM):', style: TitenTypography.dataLabel),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: TitenColors.surfaceWhite,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: TitenColors.outlineBorder),
-          ),
-          child: Column(
-            children: [
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('Peringatan AWAS Prioritas Tinggi', style: TitenTypography.bodyLarge),
-                subtitle: Text('Bypass mode senyap jika konsensus longsor/karhutla aktif', style: TitenTypography.bodySmall),
-                value: true,
-                onChanged: (v) {},
+            // 4. Informasi Proyek Lomba MAGE 12
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: tokens.surfaceSubtle,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: tokens.borderSubtle, width: 1),
               ),
-              const Divider(),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text('Getaran Sirine Virtual', style: TitenTypography.bodyLarge),
-                subtitle: Text('Pola getaran darurat saat alarm sirine 120dB berbunyi', style: TitenTypography.bodySmall),
-                value: true,
-                onChanged: (v) {},
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TITEN — Sistem Peringatan Dini Bencana Multi-Sensor LoRa',
+                    style: TitenTypography.technical(color: tokens.textPrimary).copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Kategori IoT — Multimedia and Game Event (MAGE) 12 ITS Surabaya.\nDesain sistem dan kontrak interaksi: 7 Oktober 2026.',
+                    style: TitenTypography.metadata(color: tokens.textMetadata).copyWith(fontSize: 12),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+            ),
 
-  Widget _buildAboutCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TitenColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: TitenColors.outlineBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: TitenColors.primaryAccent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.shield_outlined, color: TitenColors.primaryAccent, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text('Tentang Proyek TITEN', style: TitenTypography.titleLarge.copyWith(fontSize: 15)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'TITEN (Sistem Peringatan Dini Tanah Longsor & Kebakaran Hutan) dikembangkan oleh Tim TRILOGY dari SMK Budi Luhur, Kota Tangerang untuk kompetisi MAGE 12 (Subtema: Climate Disaster Technology).',
-            style: TitenTypography.bodySmall.copyWith(height: 1.4),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Tim Penyusun:\n• Muhammad Zahir Siraj\n• Zabdan Harjati Purnomo\n• Muhammad Rasya Al Faridzi',
-            style: TitenTypography.bodySmall.copyWith(fontWeight: FontWeight.w600, height: 1.4),
-          ),
-          const SizedBox(height: 14),
-          const Divider(),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Versi Aplikasi', style: TitenTypography.bodySmall),
-              Text('v1.0.0 (Web App & Mobile Dual)', style: TitenTypography.dataLabel.copyWith(fontSize: 11)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoRow(String label, String value, {bool isGreen = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TitenTypography.bodyMedium),
-        Text(
-          value,
-          style: TitenTypography.dataValue.copyWith(
-            fontSize: 13,
-            color: isGreen ? TitenColors.statusAman : TitenColors.textMain,
-          ),
+            const SizedBox(height: 20),
+            const CacheStatusFooter(),
+            const SizedBox(height: 24),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

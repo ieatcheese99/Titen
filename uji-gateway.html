@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TITEN · Uji LoRa melalui gateway</title>
+  <style>
+    :root{color-scheme:light;font-family:system-ui,sans-serif;color:#18181b;background:#f4f4f5}*{box-sizing:border-box}body{margin:0}main{max-width:1040px;margin:auto;padding:32px 20px}h1{font-size:clamp(26px,5vw,38px);margin:12px 0}h2{font-size:18px;margin:0 0 12px}p{line-height:1.65}.muted,small{color:#52525b}.eyebrow{font:700 12px ui-monospace,monospace;letter-spacing:.12em;color:#52525b}.panel{background:#fff;border:1px solid #d4d4d8;border-radius:10px;padding:20px;margin-top:20px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}.metric{margin:0;min-height:132px}.value{display:block;font:600 27px ui-monospace,monospace;margin:12px 0 6px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}button{min-height:48px;padding:10px 18px;border:1px solid #a1a1aa;border-radius:8px;background:white;color:#18181b;font:600 15px system-ui;cursor:pointer}button.primary{color:white;background:#18181b;border-color:#18181b}button:disabled{opacity:.55;cursor:default}:focus-visible{outline:3px solid #2563eb;outline-offset:3px}.badge{display:inline-block;background:#e4e4e7;padding:6px 10px;border-radius:6px;font-size:14px;font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,monospace;max-height:280px;overflow:auto;background:#f4f4f5;border-radius:6px;padding:12px}.warning{border-left:4px solid #a16207}a{color:#1d4ed8}@media(min-width:800px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  </style>
+  <script src="uji-gateway.js" defer></script>
+</head>
+<body><main>
+  <div class="eyebrow">TITEN / NODE → LORA → GATEWAY → USB</div>
+  <h1>Uji paket LoRa di browser.</h1>
+  <p class="muted">Pakai kode <strong>node_sensor</strong> pada node dan <strong>gateway_node</strong> pada gateway WROOM-32. Halaman ini menerima JSON gateway melalui USB. Internet 4G belum diperlukan.</p>
+  <section class="panel">
+    <span id="connection" class="badge" role="status">USB belum terhubung</span>
+    <div class="actions"><button id="connect" class="primary">Hubungkan gateway</button><button id="disconnect" disabled>Putuskan koneksi</button></div>
+    <p id="message" role="status">Tutup Serial Monitor Arduino, pilih COM gateway, lalu tekan RST gateway sekali untuk melihat log kesiapan.</p>
+    <p id="radio" class="muted">Kesiapan LoRa belum terkonfirmasi.</p>
+    <small id="freshness">Belum ada paket dari node.</small>
+  </section>
+  <section class="grid" aria-label="Data terakhir yang dilaporkan node">
+    <article class="panel metric"><span>Node pengirim</span><strong id="node-id" class="value">—</strong><small id="count">0 paket diterima browser</small></article>
+    <article class="panel metric"><span>Kemiringan</span><strong id="tilt" class="value">—</strong><small>Dilaporkan node</small></article>
+    <article class="panel metric"><span>Kelembapan tanah</span><strong id="soil" class="value">—</strong><small>Menurut kalibrasi pada node</small></article>
+    <article class="panel metric"><span>Suhu udara</span><strong id="temp" class="value">—</strong><small>Validitas DHT perlu dicek di node</small></article>
+    <article class="panel metric"><span>Kelembapan udara</span><strong id="humidity" class="value">—</strong><small>Dilaporkan node</small></article>
+    <article class="panel metric"><span>Sinyal LoRa · RSSI</span><strong id="rssi" class="value">—</strong><small>Dari radio gateway</small></article>
+    <article class="panel metric"><span>Sinyal LoRa · SNR</span><strong id="snr" class="value">—</strong><small>Dari radio gateway</small></article>
+    <article class="panel metric"><span>Status dari node</span><strong id="status" class="value">—</strong><small id="hazard">Belum dinilai</small></article>
+  </section>
+  <section class="panel"><h2>Ambil pembacaan berikutnya</h2><p>Setelah gateway siap, tekan <strong>RST pada node</strong>. Node biasa membaca sensor, mengirim paket, lalu tidur 6 jam. Untuk mengulang: ubah kondisi sensor lalu tekan RST node lagi. <strong>node_bench tidak mengirim LoRa.</strong></p></section>
+  <section class="panel warning"><h2>Batas pengujian</h2><p>JSON dicetak firmware gateway setelah CRC paket cocok. Halaman membuktikan paket sampai ke gateway dan browser; belum menguji WiFi, cloud, atau alarm fisik. Kode node saat ini mengganti DHT gagal dengan 27,5°C/65% dan tidak mengirim penanda sensor valid. Jadi angka dan status yang dilaporkan belum membuktikan semua sensor bekerja atau lokasi aman. Baterai, buzzer, dan LED tetap belum diuji.</p></section>
+  <section class="panel"><h2>Log gateway</h2><pre id="log">Menunggu koneksi…</pre><button id="export" disabled>Unduh paket JSON</button></section>
+  <p class="muted"><a href="uji-node.html">Uji sensor langsung melalui USB</a> · <a href="docs/PANDUAN_UJI_SENSOR_DAN_WEB.md">Panduan pengujian lengkap</a></p>
+</main></body></html>

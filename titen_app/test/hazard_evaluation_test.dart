@@ -63,12 +63,13 @@ void main() {
         batteryPct: 90,
         loraRssi: -75,
         loraSnr: 9.0,
-        lastSeen: DateTime.now().subtract(const Duration(minutes: 10)),
+        lastSeen: DateTime.now().subtract(const Duration(seconds: 30)),
       );
 
       expect(node.statusText, 'AWAS LONGSOR');
       expect(node.hazardTypeText, 'Tanah Longsor');
       expect(node.isOnline, isTrue);
+      expect(node.getFreshness(), FreshnessStatus.fresh);
     });
 
     test('ZoneStatus factory should return appropriate levels and colors', () {
@@ -85,6 +86,10 @@ void main() {
       expect(awasKarhutla.level, 3);
       expect(awasKarhutla.hazardType, 2);
       expect(awasKarhutla.isDanger, isTrue);
+
+      final unknown = ZoneStatus.unknown();
+      expect(unknown.level, -1);
+      expect(unknown.isUnknown, isTrue);
     });
   });
 }

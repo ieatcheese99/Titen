@@ -3,9 +3,10 @@ import '../constants/app_colors.dart';
 import '../constants/app_typography.dart';
 import '../constants/hazard_constants.dart';
 
-/// Shows 4-Digit Security PIN Modal (US-05) for Technician Siren Test
+/// Shows 4-Digit Security PIN Modal for Operator Siren Test per 03_APP_FLUTTER_SPEC.md §6
 Future<bool> showPinModal(BuildContext context) async {
   final pinController = TextEditingController();
+  final tokens = context.titenTokens;
   String? errorMessage;
 
   final result = await showDialog<bool>(
@@ -15,22 +16,23 @@ Future<bool> showPinModal(BuildContext context) async {
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            backgroundColor: TitenColors.surfaceWhite,
+            backgroundColor: tokens.surfacePanel,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: TitenColors.outlineBorder),
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: tokens.borderSubtle),
             ),
             title: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: TitenColors.statusSiaga.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    color: tokens.warning.bg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: tokens.warning.border),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.lock_outline_rounded,
-                    color: TitenColors.statusSiaga,
+                    color: tokens.warning.fg,
                     size: 22,
                   ),
                 ),
@@ -40,12 +42,12 @@ Future<bool> showPinModal(BuildContext context) async {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Verifikasi Teknisi',
+                        'Otorisasi Operator',
                         style: TitenTypography.titleLarge.copyWith(fontSize: 17),
                       ),
                       Text(
-                        'Uji Sirine Jarak Jauh (120dB)',
-                        style: TitenTypography.bodySmall,
+                        'Uji Output Sirine EWS',
+                        style: TitenTypography.metadata(color: tokens.textMetadata),
                       ),
                     ],
                   ),
@@ -57,11 +59,8 @@ Future<bool> showPinModal(BuildContext context) async {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Masukkan PIN 4-digit teknisi untuk memicu aktivasi sirine lokal tanpa menyebarkan alarm evakuasi ke warga.',
-                  style: TitenTypography.bodyMedium.copyWith(
-                    color: TitenColors.textMuted,
-                    fontSize: 13,
-                  ),
+                  'Masukkan PIN verifikasi untuk memicu uji coba sirine hardware.',
+                  style: TitenTypography.body(color: tokens.textSecondary).copyWith(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -71,8 +70,8 @@ Future<bool> showPinModal(BuildContext context) async {
                   obscureText: true,
                   autofocus: true,
                   textAlign: TextAlign.center,
-                  style: TitenTypography.dataDisplay.copyWith(
-                    letterSpacing: 12,
+                  style: TitenTypography.value(color: tokens.textPrimary).copyWith(
+                    letterSpacing: 10,
                     fontSize: 22,
                   ),
                   decoration: InputDecoration(
@@ -80,17 +79,14 @@ Future<bool> showPinModal(BuildContext context) async {
                     counterText: '',
                     errorText: errorMessage,
                     filled: true,
-                    fillColor: TitenColors.surfaceSubtle,
+                    fillColor: tokens.surfaceSubtle,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Center(
                   child: Text(
-                    'PIN Default Demo: ${HazardConstants.defaultSirenPin}',
-                    style: TitenTypography.bodySmall.copyWith(
-                      fontSize: 11,
-                      color: TitenColors.textMuted,
-                    ),
+                    'PIN Default Pengujian: ${HazardConstants.defaultSirenPin}',
+                    style: TitenTypography.metadata(color: tokens.textMetadata).copyWith(fontSize: 11),
                   ),
                 ),
               ],
@@ -99,14 +95,11 @@ Future<bool> showPinModal(BuildContext context) async {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  'Batal',
-                  style: TextStyle(color: TitenColors.textMuted),
-                ),
+                child: Text('Batal', style: TextStyle(color: tokens.textMetadata)),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: TitenColors.statusAwasLongsor,
+                  backgroundColor: tokens.critical.fg,
                 ),
                 onPressed: () {
                   if (pinController.text == HazardConstants.defaultSirenPin) {
@@ -117,7 +110,7 @@ Future<bool> showPinModal(BuildContext context) async {
                     });
                   }
                 },
-                child: const Text('Aktifkan Sirine'),
+                child: const Text('Konfirmasi & Aktifkan'),
               ),
             ],
           );
